@@ -22,26 +22,6 @@ const URL = "https://watchasian.cc"
 
 func main() {
 	fmt.Println("*** Starting Scraper ***")
-
-	// searchResults := search("run on")
-
-	// episodes := getEpisodes(searchResults[0])
-	// for i := 0; i < len(episodes); i++ {
-	// 	fmt.Println(episodes[i])
-	// 	getAjax(URL + episodes[i].Link)
-	// }
-
-	ajax := getAjax("https://watchasian.cc/run-on-2020-episode-14.html")
-
-	fmt.Println(ajax)
-
-	if ajax.Found {
-		link := scrapeEpisode(ajax)
-		fmt.Printf(link)
-	}
-
-	// scrapeEmbed("https://embed.dramacool.so/streaming.php?id=MjE5ODgx&title=Run+On+%282020%29+episode+1&typesub=SUB")
-
 }
 
 // DramaInfo - Information about a drama
@@ -179,12 +159,13 @@ type SourceOption struct {
 	Type    string `json:"type"`
 }
 
-// TrackOption -
+// TrackOption - Part of AjaxResponse
 type TrackOption struct {
 	File string `json:"file"`
 	Kind string `json:"kind"`
 }
 
+// AjaxResponse - The expected JSON response from the DC Ajax endpoint
 type AjaxResponse struct {
 	Source   []SourceOption `json:"source"`
 	SourceBK []SourceOption `json:"source_bk"`
@@ -211,18 +192,12 @@ func scrapeEpisode(ajax AjaxResult) string {
 
 	defer res.Body.Close()
 
-	// body, err2 := ioutil.ReadAll(res.Body)
-
-	// if err2 != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// json, _ := json.MarshalIndent(string(body), "", "    ")
-	// fmt.Printf("%s\n", json)
 	var obj AjaxResponse
 	decoder := json.NewDecoder(res.Body)
 	decoder.DisallowUnknownFields()
 	decoder.Decode(&obj)
+
+	// fmt.Println(obj)
 
 	link := obj.Source[0].File
 
