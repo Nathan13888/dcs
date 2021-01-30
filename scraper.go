@@ -1,0 +1,263 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/gocolly/colly"
+)
+
+// TODO: debug level
+
+// TODO: multiple backup URLs
+const URL = "https://watchasian.cc"
+
+func main() {
+	fmt.Println("*** Starting Scraper ***")
+
+	// searchResults := search("run on")
+
+	// episodes := getEpisodes(searchResults[0])
+	// for i := 0; i < len(episodes); i++ {
+	// 	fmt.Println(episodes[i])
+	// 	getAjax(URL + episodes[i].Link)
+	// }
+
+	ajax := getAjax("https://watchasian.cc/run-on-2020-episode-14.html")
+
+	fmt.Println(ajax)
+
+	if ajax.Found {
+		link := scrapeEpisode(ajax)
+		fmt.Printf(link)
+	}
+
+	// scrapeEmbed("https://embed.dramacool.so/streaming.php?id=MjE5ODgx&title=Run+On+%282020%29+episode+1&typesub=SUB")
+
+}
+
+// DramaInfo - Information about a drama
+type DramaInfo struct {
+	FullURL string
+	SubURL  string
+	Domain  string
+	Name    string
+}
+
+// TODO: displayResults() --> display search results in a table in stdout
+
+func search(qry string) []DramaInfo {
+	fmt.Printf("\nSearching for `%s`...\n\n", qry)
+
+	url := fmt.Sprintf("%s/search?type=movies&keyword=%s", URL, url.QueryEscape(qry))
+
+	res := []DramaInfo{}
+
+	c := getCollector()
+
+	// check if there were results
+	c.OnHTML("h3.title", func(e *colly.HTMLElement) {
+		name := strings.Trim(e.DOM.Contents().Text(), " \n")
+
+		subURL, _ := e.DOM.Parent().Attr("href")
+		fullURL := e.Request.AbsoluteURL(subURL)
+
+		// TODO: filter nil results
+		// if name == "" || subURL || fullURL {
+		// 	panic("")
+		// }
+
+		fmt.Printf("Found `%s` --> `%s`\n", name, subURL)
+		var obj = DramaInfo{
+			FullURL: fullURL,
+			SubURL:  subURL,
+			Domain:  URL,
+			Name:    name,
+		}
+		res = append(res, obj)
+	})
+	c.Visit(url)
+
+	// printObj(res)
+	// fmt.Println(res)
+
+	return res
+}
+
+// EpisodeInfo - Information about episodes
+type EpisodeInfo struct {
+	Number int
+	Date   string
+	Link   string
+}
+
+func getEpisodes(drama DramaInfo) []EpisodeInfo {
+	fmt.Printf("\nFetching episodes of `%s`\n\n", drama.Name)
+	episodes := []EpisodeInfo{}
+
+	c := getCollector()
+	// TODO: cache page
+
+	c.OnHTML("ul.all-episode", func(e *colly.HTMLElement) {
+		e.ForEach("li a.img h3.title", func(i int, ee *colly.HTMLElement) {
+			parent := ee.DOM.Parent()
+			link, _ := parent.Attr("href")
+			fullname := strings.Trim(ee.DOM.Contents().Text(), " \n")
+			time := strings.Trim(parent.ChildrenFiltered("span.time").Text(), " \n")
+			fmt.Printf("%s was posted %s\n", fullname, time)
+			num, err2 := strconv.Atoi(fullname[len(drama.Name)+9:])
+			if err2 != nil {
+				fmt.Println("ERROR: The episode number could not be interpreted...")
+				fmt.Print(err2)
+			} else {
+				obj := EpisodeInfo{
+					Number: num,
+					Date:   time, //TODO: finish implementing time
+					Link:   link,
+				}
+				episodes = append(episodes, obj)
+			}
+		})
+	})
+
+	c.Visit(drama.FullURL)
+
+	return episodes
+}
+
+// AjaxResult - The result of scraping the ajax url from an episode link
+type AjaxResult struct {
+	Found     bool
+	Ajax      string
+	Streaming string
+	Domain    string
+}
+
+func getAjax(episode string) AjaxResult {
+	res := AjaxResult{
+		Found:     false,
+		Ajax:      "",
+		Streaming: "",
+		Domain:    "",
+	}
+
+	c := getCollector()
+	c.OnHTML("div.watch_video iframe", func(e *colly.HTMLElement) {
+		src := e.Attr("src")
+		index := strings.Index(src, "streaming")
+		if src != "" && index != -1 {
+			streaming := src[index:]
+			res.Streaming = streaming
+			ajax := strings.Replace(streaming, "streaming", "ajax", 1)
+			res.Ajax = ajax
+			index2 := strings.Index(src, "embed")
+			if index2 != -1 {
+				res.Found = true
+				domain := src[index2:index]
+				res.Domain = domain
+			}
+		}
+	})
+	c.Visit(episode)
+
+	return res
+}
+
+// SourceOption - Option for source of video
+type SourceOption struct {
+	File    string `json:"file"`
+	Label   string `json:"label"`
+	Default bool   `json:"default"`
+	Type    string `json:"type"`
+}
+
+// TrackOption -
+type TrackOption struct {
+	File string `json:"file"`
+	Kind string `json:"kind"`
+}
+
+type AjaxResponse struct {
+	Source   []SourceOption `json:"source"`
+	SourceBK []SourceOption `json:"source_bk"`
+	Track    []TrackOption  `json:"track"`
+	// Advertising []string
+	LinkIFrame string `json:"linkiframe"`
+}
+
+func scrapeEpisode(ajax AjaxResult) string {
+	client := &http.Client{}
+	url := fmt.Sprintf("https://%s%s&refer=none", ajax.Domain, ajax.Ajax)
+	req, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+	req.Header.Set("accept", "application/json, text/javascript, */*; q=0.01")
+	// req.Header.Set("accept-langauge","en-US,en;q=0.9,zh-TW;q=0.8,zh-CN;q=0.7,zh:q=0.6")
+	req.Header.Set("sec-fetch-mode", "cors")
+	req.Header.Set("sec-fetch-site", "same-origin")
+	req.Header.Set("x-requested-with", "XMLHttpRequest")
+
+	res, err := client.Do(req)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer res.Body.Close()
+
+	// body, err2 := ioutil.ReadAll(res.Body)
+
+	// if err2 != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// json, _ := json.MarshalIndent(string(body), "", "    ")
+	// fmt.Printf("%s\n", json)
+	var obj AjaxResponse
+	decoder := json.NewDecoder(res.Body)
+	decoder.DisallowUnknownFields()
+	decoder.Decode(&obj)
+
+	link := obj.Source[0].File
+
+	return link
+}
+
+func printObj(obj interface{}) {
+	resJSON, _ := json.MarshalIndent(obj, "  ", "    ")
+	fmt.Println(string(resJSON))
+}
+
+func getCollector() *colly.Collector {
+	c := colly.NewCollector() // colly.Debugger(&debug.LogDebugger{})
+
+	c.WithTransport(&http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	})
+
+	// Set error handler
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+	})
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Printf("\nVisiting: %s\n\n", r.URL.String())
+	})
+
+	return c
+}
