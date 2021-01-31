@@ -126,6 +126,8 @@ func GetEpisodes(drama DramaInfo) []EpisodeInfo {
 // AjaxResult - The result of scraping the ajax url from an episode link
 type AjaxResult struct {
 	Found     bool
+	Name      string
+	Num       int
 	Ajax      string
 	Streaming string
 	Domain    string
@@ -134,13 +136,26 @@ type AjaxResult struct {
 // GetAjax - Find the link for the Ajax
 func GetAjax(episode string) AjaxResult {
 	res := AjaxResult{
-		Found:     false,
-		Ajax:      "",
-		Streaming: "",
-		Domain:    "",
+		Found: false,
 	}
 
 	c := getCollector()
+
+	c.OnHTML("div.watch-drama h1", func(e *colly.HTMLElement) {
+		num := strings.Split(strings.Trim(e.DOM.Text(), " \n"), " ")
+		// fmt.Println(num)
+		conv, err := strconv.Atoi(num[len(num)-1])
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			res.Num = conv
+		}
+	})
+
+	c.OnHTML("div.category a", func(e *colly.HTMLElement) {
+		res.Name = e.DOM.Text()
+	})
+
 	c.OnHTML("div.watch_video iframe", func(e *colly.HTMLElement) {
 		src := e.Attr("src")
 		index := strings.Index(src, "streaming")

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"dcs/scraper"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -17,7 +18,25 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("download called")
+		fmt.Printf("Attemping to download an episode from '%s'\n\n", args[0])
+		ajax := scraper.GetAjax(args[0])
+		if ajax.Found {
+			fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
+			link := scraper.ScrapeEpisode(ajax)
+			fmt.Printf("Found '%s'\n\n", link)
+			// TODO: prompt confirm download
+			fmt.Println("Downloading...")
+			err := scraper.Download(scraper.DownloadInfo{
+				Link: link,
+				Name: ajax.Name,
+				Num:  ajax.Num,
+			})
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			fmt.Println("FAILED to find episode...")
+		}
 	},
 }
 
