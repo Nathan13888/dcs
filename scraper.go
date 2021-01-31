@@ -20,10 +20,6 @@ import (
 // TODO: multiple backup URLs
 const URL = "https://watchasian.cc"
 
-func main() {
-	fmt.Println("*** Starting Scraper ***")
-}
-
 // DramaInfo - Information about a drama
 type DramaInfo struct {
 	FullURL string
@@ -32,9 +28,8 @@ type DramaInfo struct {
 	Name    string
 }
 
-// TODO: displayResults() --> display search results in a table in stdout
-
-func search(qry string) []DramaInfo {
+// Search - Search for something...
+func Search(qry string) []DramaInfo {
 	fmt.Printf("\nSearching for `%s`...\n\n", qry)
 
 	url := fmt.Sprintf("%s/search?type=movies&keyword=%s", URL, url.QueryEscape(qry))
@@ -79,7 +74,8 @@ type EpisodeInfo struct {
 	Link   string
 }
 
-func getEpisodes(drama DramaInfo) []EpisodeInfo {
+// GetEpisodes - Tells you all the available episodes
+func GetEpisodes(drama DramaInfo) []EpisodeInfo {
 	fmt.Printf("\nFetching episodes of `%s`\n\n", drama.Name)
 	episodes := []EpisodeInfo{}
 
@@ -121,7 +117,8 @@ type AjaxResult struct {
 	Domain    string
 }
 
-func getAjax(episode string) AjaxResult {
+// GetAjax - Find the link for the Ajax
+func GetAjax(episode string) AjaxResult {
 	res := AjaxResult{
 		Found:     false,
 		Ajax:      "",
@@ -174,7 +171,8 @@ type AjaxResponse struct {
 	LinkIFrame string `json:"linkiframe"`
 }
 
-func scrapeEpisode(ajax AjaxResult) string {
+// ScrapeEpisode - Get the link to the video source of an episode
+func ScrapeEpisode(ajax AjaxResult) string {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://%s%s&refer=none", ajax.Domain, ajax.Ajax)
 	req, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
