@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"math"
+	"strings"
+
+	"dcs/scraper"
 
 	"github.com/spf13/cobra"
 )
@@ -9,15 +13,23 @@ import (
 // searchCmd represents the search command
 var searchCmd = &cobra.Command{
 	Use:   "search",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "USAGE: dcs search <search phrase>",
+	Long:  `Search for whatever you want...`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("search called")
+		// TODO: Save results as context/search
+
+		qry := strings.ReplaceAll(strings.Join(args, " "), "\"", "")
+		fmt.Printf("Searching for '%s'...\n\n", qry)
+		res := scraper.Search(qry)
+		if len(res) == 0 {
+			fmt.Println("Sorry, no results found...")
+		} else {
+			fmt.Printf("Here are the first 10 results:\n\n")
+			for i := 0; i < (int)(math.Min(10, (float64)(len(res)))); i++ {
+				var option scraper.DramaInfo = res[i]
+				fmt.Printf("%d) %s --> %s\n\n", i+1, option.Name, option.FullURL)
+			}
+		}
 	},
 }
 

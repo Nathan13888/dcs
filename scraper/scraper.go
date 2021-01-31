@@ -1,4 +1,4 @@
-package main
+package scraper
 
 import (
 	"bytes"
@@ -30,8 +30,6 @@ type DramaInfo struct {
 
 // Search - Search for something...
 func Search(qry string) []DramaInfo {
-	fmt.Printf("\nSearching for `%s`...\n\n", qry)
-
 	url := fmt.Sprintf("%s/search?type=movies&keyword=%s", URL, url.QueryEscape(qry))
 
 	res := []DramaInfo{}
@@ -49,8 +47,6 @@ func Search(qry string) []DramaInfo {
 		// if name == "" || subURL || fullURL {
 		// 	panic("")
 		// }
-
-		fmt.Printf("Found `%s` --> `%s`\n", name, subURL)
 		var obj = DramaInfo{
 			FullURL: fullURL,
 			SubURL:  subURL,
