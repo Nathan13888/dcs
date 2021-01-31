@@ -243,7 +243,7 @@ func getCollector() *colly.Collector {
 	})
 
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Printf("\nVisiting: %s\n\n", r.URL.String())
+		// fmt.Printf("\nVisiting: %s\n\n", r.URL.String())
 	})
 
 	return c
