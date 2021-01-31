@@ -70,9 +70,27 @@ type EpisodeInfo struct {
 	Link   string
 }
 
+// GetEpisodesByLink - GetEpisodes by just give a link
+func GetEpisodesByLink(link string) []EpisodeInfo {
+	// TODO: use GetInfo() instead
+	c := getCollector()
+
+	var name string
+
+	c.OnHTML("div.info h1", func(e *colly.HTMLElement) {
+		name = e.DOM.Text()
+	})
+
+	c.Visit(link)
+	return GetEpisodes(DramaInfo{
+		FullURL: link,
+		Name:    name,
+	})
+}
+
 // GetEpisodes - Tells you all the available episodes
 func GetEpisodes(drama DramaInfo) []EpisodeInfo {
-	fmt.Printf("\nFetching episodes of `%s`\n\n", drama.Name)
+	// fmt.Printf("\nFetching episodes of `%s`\n\n", drama.Name)
 	episodes := []EpisodeInfo{}
 
 	c := getCollector()
@@ -84,7 +102,7 @@ func GetEpisodes(drama DramaInfo) []EpisodeInfo {
 			link, _ := parent.Attr("href")
 			fullname := strings.Trim(ee.DOM.Contents().Text(), " \n")
 			time := strings.Trim(parent.ChildrenFiltered("span.time").Text(), " \n")
-			fmt.Printf("%s was posted %s\n", fullname, time)
+			// fmt.Printf("%s was posted %s\n", fullname, time)
 			num, err2 := strconv.Atoi(fullname[len(drama.Name)+9:])
 			if err2 != nil {
 				fmt.Println("ERROR: The episode number could not be interpreted...")

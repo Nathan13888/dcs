@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"dcs/scraper"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -9,15 +11,28 @@ import (
 // infoCmd represents the info command
 var infoCmd = &cobra.Command{
 	Use:   "info",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Gives you information about a drama.",
+	Long: `Know about the episodes and other info related to anything you want on DramaCool/WatchAsian.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	USAGE: dcs info <link here or name of drama>`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("info called")
+		var link string
+		if !strings.Contains(args[0], "/") {
+			res := scraper.Search(args[0])
+			if len(res) > 0 {
+				link = res[0].FullURL
+			}
+		} else {
+			link = args[0]
+		}
+		res := scraper.GetEpisodesByLink(link)
+		fmt.Printf("Displaying info for '%s'\n", link)
+		// TODO: show info about description
+		fmt.Printf("\n%d Episodes Available\n\n", len(res))
+		for _, e := range res {
+			fmt.Printf("Episode %d was available on %s --> %s\n",
+				e.Number, e.Date, scraper.URL+e.Link)
+		}
 	},
 }
 
