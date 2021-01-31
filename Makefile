@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := run
 
 run:
-	go run scraper.go
+	go run main.go
+
