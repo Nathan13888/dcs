@@ -19,7 +19,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Attemping to download an episode from '%s'\n\n", args[0])
-		ajax := scraper.GetAjax(args[0])
+		ajax := scraper.GetAjax(scraper.JoinArgs(args))
 		if ajax.Found {
 			fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
 			link := scraper.ScrapeEpisode(ajax)

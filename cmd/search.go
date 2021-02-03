@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"math"
-	"strings"
 
 	"dcs/scraper"
 
@@ -18,7 +17,7 @@ var searchCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Save results as context/search
 
-		qry := strings.ReplaceAll(strings.Join(args, " "), "\"", "")
+		qry := scraper.JoinArgs(args)
 		fmt.Printf("Searching for '%s'...\n\n", qry)
 		res := scraper.Search(qry)
 		if len(res) == 0 {
