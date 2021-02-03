@@ -18,9 +18,16 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Attemping to download an episode from '%s'\n\n", args[0])
-		ajax := scraper.GetAjax(scraper.JoinArgs(args))
+		// TODO: sanitize arguments
+		var link string
+		if scraper.IsLink(args[0]) {
+			link = args[0]
+		} else {
+			link = scraper.FirstSearch(scraper.JoinArgs(args))
+		}
+		ajax := scraper.GetAjax(link)
 		if ajax.Found {
+			fmt.Printf("Attemping to download an episode from '%s'\n\n", link)
 			fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
 			link := scraper.ScrapeEpisode(ajax)
 			fmt.Printf("Found '%s'\n\n", link)

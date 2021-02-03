@@ -3,7 +3,6 @@ package cmd
 import (
 	"dcs/scraper"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -17,13 +16,10 @@ var infoCmd = &cobra.Command{
 	USAGE: dcs info <link here or name of drama>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var link string
-		if !strings.Contains(scraper.JoinArgs(args), "/") {
-			res := scraper.Search(args[0])
-			if len(res) > 0 {
-				link = res[0].FullURL
-			}
-		} else {
+		if scraper.IsLink(args[0]) {
 			link = args[0]
+		} else {
+			link = scraper.FirstSearch(scraper.JoinArgs(args))
 		}
 		res := scraper.GetEpisodesByLink(link)
 		fmt.Printf("Displaying info for '%s'\n", link)
