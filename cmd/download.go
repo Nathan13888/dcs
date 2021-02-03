@@ -3,6 +3,7 @@ package cmd
 import (
 	"dcs/scraper"
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,29 @@ to quickly create a Cobra application.`,
 		if scraper.IsLink(args[0]) {
 			link = args[0]
 		} else {
-			link = scraper.FirstSearch(scraper.JoinArgs(args))
+			res := scraper.FirstSearch(scraper.JoinArgs(args[:len(args)-1]))
+			if res != "" {
+				// TODO: sanitize value of episode
+				num, err := strconv.Atoi(args[len(args)-1])
+				if err != nil {
+					panic(err)
+				}
+				episodes := scraper.GetEpisodesByLink(res)
+				var url string
+				for _, e := range episodes {
+					if e.Number == num {
+						url = e.Link
+					}
+				}
+				if len(episodes) >= num || url == "" {
+					link = scraper.URL + url
+				} else {
+					fmt.Printf("Episode %d was not available", num)
+				}
+			} else {
+				fmt.Println("There has been a problem using your specified query")
+				return
+			}
 		}
 		ajax := scraper.GetAjax(link)
 		if ajax.Found {

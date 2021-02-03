@@ -30,6 +30,7 @@ func Download(info DownloadInfo) error {
 	}
 
 	folder := info.Name
+	// TODO: add .part extension
 	episode := fmt.Sprintf("ep%d.mp4", info.Num)
 
 	// TODO: config download location
