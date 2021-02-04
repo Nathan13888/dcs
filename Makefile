@@ -7,5 +7,5 @@ build:
 	go build -o bin/dcs
 
 install:
-	cp bin/dcs $HOME/.local/bin/dcs
+	cp bin/dcs ~/.local/bin/dcs
 
