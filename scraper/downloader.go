@@ -31,12 +31,12 @@ func Download(info DownloadInfo) error {
 	path := dir + "/" + episode
 
 	// Create paths and directories
-	fmt.Printf("Creating path '%s.part'\n\n", path)
-	err = os.MkdirAll(dir+".part", 0755)
+	fmt.Printf("Creating path '%s'\n\n", path+".part")
+	err = os.MkdirAll(dir, 0755)
 	if err != nil {
 		return err
 	}
-	out, err := os.Create(path)
+	out, err := os.Create(path + ".part")
 	if err != nil {
 		return err
 	}
