@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -55,13 +56,12 @@ Loop:
 	for {
 		select {
 		case <-t.C:
-			fmt.Printf("  transferred %v / %v bytes (%.2f%%)\n",
-				res.BytesComplete(),
-				res.Size,
+			fmt.Printf("  transferred %s / %s (%.2f%%)\n",
+				convertSize(res.BytesComplete()),
+				convertSize(res.Size),
 				100*res.Progress())
 
 		case <-res.Done:
-			// download is complete
 			break Loop
 		}
 	}
@@ -78,6 +78,14 @@ Loop:
 	}
 
 	return nil
+}
+
+func convertSize(bytes int64) string {
+	units := []string{"B", "KB", "MB", "GB", "TB"}
+	pow := int64(math.Log(float64(bytes)) / math.Log(1024))
+	return fmt.Sprintf("%.2f %s",
+		float64(bytes)/math.Pow(1024, float64(pow)),
+		units[pow])
 }
 
 func Lookup() bool {
