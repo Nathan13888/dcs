@@ -19,6 +19,7 @@ type DownloadInfo struct {
 
 // Download - Download something
 func Download(info DownloadInfo) error {
+	start := time.Now()
 	// Paths
 	home, err := homedir.Dir()
 	if err != nil {
@@ -31,16 +32,22 @@ func Download(info DownloadInfo) error {
 	path := dir + "/" + episode
 
 	// Create paths and directories
-	fmt.Printf("Creating path '%s'\n\n", path+".part")
+	fmt.Printf("Creating path '%s'\n\n", dir)
 	err = os.MkdirAll(dir, 0755)
 	if err != nil {
 		return err
 	}
-	out, err := os.Create(path + ".part")
-	if err != nil {
-		return err
-	}
-	defer out.Close()
+	// out, err := os.Create(path + ".part")
+	// if err != nil {
+	// 	return err
+	// }
+	// defer out.Close()
+
+	setupTime := time.Since(start)
+
+	// TODO: look up if target file exists and show prompt; accept flags
+
+	downloadStart := time.Now()
 
 	// Start downloading
 	client := grab.NewClient()
@@ -71,11 +78,16 @@ Loop:
 		return err
 	}
 
-	fmt.Printf("Download completed. Renaming file to final name.\n\n")
+	fmt.Printf("\nDownload completed. Renaming file to final name.\n\n")
 	err = os.Rename(path+".part", path)
 	if err != nil {
 		return err
 	}
+
+	downloadTime := time.Since(downloadStart)
+	// TODO: Scrap Time
+	fmt.Printf("* Setup Time      >> %v\n", setupTime)
+	fmt.Printf("* Download Time   >> %v\n", downloadTime)
 
 	return nil
 }
