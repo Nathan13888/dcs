@@ -9,13 +9,10 @@ import (
 // rmCmd represents the rm command
 var rmCmd = &cobra.Command{
 	Use:   "rm",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Remove a drama from being downloaded periodically",
+	Long: `Remove a drama for the DCS daemon to periodically check for updates and download.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	USAGE: service rm <id of drama in list>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("rm called")
 	},

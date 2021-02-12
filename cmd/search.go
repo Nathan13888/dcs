@@ -12,8 +12,10 @@ import (
 // searchCmd represents the search command
 var searchCmd = &cobra.Command{
 	Use:   "search",
-	Short: "USAGE: dcs search <search phrase>",
-	Long:  `Search for whatever you want...`,
+	Short: "Search for a drama",
+	Long: `Search for anything on the website.
+
+	USAGE: dcs search <search phrase>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: Save results as context/search
 

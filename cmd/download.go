@@ -10,13 +10,11 @@ import (
 // downloadCmd represents the download command
 var downloadCmd = &cobra.Command{
 	Use:   "download",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Download an episode or episodes of a drama",
+	Long: `Download anything from DCS that you want.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	USAGE: download <link to episode>
+	USAGE: download <name of drama> <episode range>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: sanitize arguments
 		if scraper.IsLink(args[0]) {

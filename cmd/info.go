@@ -10,10 +10,11 @@ import (
 // infoCmd represents the info command
 var infoCmd = &cobra.Command{
 	Use:   "info",
-	Short: "Gives you information about a drama.",
+	Short: "Gives you information about a drama",
 	Long: `Know about the episodes and other info related to anything you want on DramaCool/WatchAsian.
 
-	USAGE: dcs info <link here or name of drama>`,
+	USAGE: dcs info <link to drama>
+	USAGE: dcs info <name of drama>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var link string
 		if scraper.IsLink(args[0]) {
