@@ -3,7 +3,6 @@ package cmd
 import (
 	"dcs/scraper"
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -20,54 +19,57 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: sanitize arguments
-		var link string
 		if scraper.IsLink(args[0]) {
-			link = args[0]
+			download(args[0])
 		} else {
 			res := scraper.FirstSearch(scraper.JoinArgs(args[:len(args)-1]))
 			if res != "" {
 				// TODO: sanitize value of episode
-				num, err := strconv.Atoi(args[len(args)-1])
-				if err != nil {
-					panic(err)
-				}
 				episodes := scraper.GetEpisodesByLink(res)
-				var url string
-				for _, e := range episodes {
-					if e.Number == num {
-						url = e.Link
+				episodeRange := scraper.GetRange(args[len(args)-1])
+				fmt.Printf("Attemping to download these episodes: %v\n\n", episodeRange)
+				for _, num := range episodeRange {
+					fmt.Printf("Looking for episode %d...\n", num)
+					var url string
+					for _, e := range episodes {
+						if e.Number == num {
+							url = e.Link
+						}
 					}
-				}
-				if len(episodes) >= num || url == "" {
-					link = scraper.URL + url
-				} else {
-					fmt.Printf("Episode %d was not available", num)
+					if len(episodes) >= num || url == "" {
+						download(scraper.URL + url)
+					} else {
+						fmt.Printf("Episode %d was not available", num)
+					}
 				}
 			} else {
 				fmt.Println("There has been a problem using your specified query")
 				return
 			}
 		}
-		ajax := scraper.GetAjax(link)
-		if ajax.Found {
-			fmt.Printf("Attemping to download an episode from '%s'\n\n", link)
-			fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
-			link := scraper.ScrapeEpisode(ajax)
-			fmt.Printf("Found '%s'\n\n", link)
-			// TODO: prompt confirm download
-			fmt.Println("Downloading...")
-			err := scraper.Download(scraper.DownloadInfo{
-				Link: link,
-				Name: ajax.Name,
-				Num:  ajax.Num,
-			})
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			fmt.Println("FAILED to find episode...")
-		}
 	},
+}
+
+func download(link string) {
+	ajax := scraper.GetAjax(link)
+	if ajax.Found {
+		fmt.Printf("Attemping to download from '%s'\n\n", link)
+		fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
+		link := scraper.ScrapeEpisode(ajax)
+		fmt.Printf("Found '%s'\n\n", link)
+		// TODO: prompt confirm download
+		fmt.Println("Downloading...")
+		err := scraper.Download(scraper.DownloadInfo{
+			Link: link,
+			Name: ajax.Name,
+			Num:  ajax.Num,
+		})
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		fmt.Print("FAILED to find episode...\n\n")
+	}
 }
 
 func init() {
