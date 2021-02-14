@@ -17,9 +17,6 @@ import (
 
 // TODO: debug level
 
-// TODO: multiple backup URLs
-const URL = "https://watchasian.cc"
-
 // DramaInfo - Information about a drama
 type DramaInfo struct {
 	FullURL string
