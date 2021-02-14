@@ -9,3 +9,6 @@ install:
 	# *** INSTALLING DCS ***
 	cp bin/dcs ~/.local/bin/dcs
 
+test:
+	go test -v ./...
+
