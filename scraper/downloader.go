@@ -2,11 +2,11 @@ package scraper
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"time"
 
 	"github.com/cavaliercoder/grab"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -20,6 +20,7 @@ type DownloadInfo struct {
 // Download - Download something
 func Download(info DownloadInfo) error {
 	start := time.Now()
+
 	// Paths
 	home, err := homedir.Dir()
 	if err != nil {
@@ -37,44 +38,42 @@ func Download(info DownloadInfo) error {
 	if err != nil {
 		return err
 	}
-	// out, err := os.Create(path + ".part")
-	// if err != nil {
-	// 	return err
-	// }
-	// defer out.Close()
 
 	setupTime := time.Since(start)
 
 	// TODO: look up if target file exists and show prompt; accept flags
-
-	downloadStart := time.Now()
 
 	// Start downloading
 	client := grab.NewClient()
 	req, _ := grab.NewRequest(path+".part", info.Link)
 	fmt.Printf("Downloading '%v'\n\n", req.URL())
 	res := client.Do(req)
-	fmt.Printf("  %v\n", res.HTTPResponse.Status)
+	fmt.Printf("Response: %v\n\n", res.HTTPResponse.Status)
 
 	t := time.NewTicker(500 * time.Millisecond)
 	defer t.Stop()
+
+	bar := pb.Full.Start64(res.Size)
+	bar.SetRefreshRate(500 * time.Millisecond)
+	bar.Set(pb.Bytes, true)
+	bar.Set(pb.SIBytesPrefix, true)
+	if err = bar.Err(); err != nil {
+		return err
+	}
+	defer bar.Finish()
 
 Loop:
 	for {
 		select {
 		case <-t.C:
-			fmt.Printf("  transferred %s / %s (%.2f%%)\n",
-				convertSize(res.BytesComplete()),
-				convertSize(res.Size),
-				100*res.Progress())
+			bar.SetCurrent(res.BytesComplete())
 
 		case <-res.Done:
 			break Loop
 		}
 	}
 
-	// check for errors
-	if err := res.Err(); err != nil {
+	if err = res.Err(); err != nil {
 		return err
 	}
 
@@ -84,20 +83,12 @@ Loop:
 		return err
 	}
 
-	downloadTime := time.Since(downloadStart)
+	downloadTime := time.Since(res.Start)
 	// TODO: Scrap Time
 	fmt.Printf("* Setup Time      >> %v\n", setupTime)
 	fmt.Printf("* Download Time   >> %v\n", downloadTime)
 
 	return nil
-}
-
-func convertSize(bytes int64) string {
-	units := []string{"B", "KB", "MB", "GB", "TB"}
-	pow := int64(math.Log(float64(bytes)) / math.Log(1024))
-	return fmt.Sprintf("%.2f %s",
-		float64(bytes)/math.Pow(1024, float64(pow)),
-		units[pow])
 }
 
 func Lookup() bool {
