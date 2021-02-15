@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"dcs/prompt"
 	"dcs/scraper"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -17,14 +19,49 @@ var downloadCmd = &cobra.Command{
 	USAGE: download <name of drama> <episode range>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: sanitize arguments
-		if scraper.IsLink(args[0]) {
+		if len(args) == 1 && scraper.IsLink(args[0]) {
 			download(args[0])
 		} else {
-			res := scraper.FirstSearch(scraper.JoinArgs(args[:len(args)-1]))
-			if res != "" {
+			var link string
+			var episodeRange []int
+			if len(args) == 0 {
+				var res string
+				var err error
+				var drama scraper.DramaInfo
+				res, err = prompt.String("Search")
+				if err != nil {
+					panic(err)
+				}
+				queries := scraper.Search(res)
+				if len(queries) == 0 {
+					panic("no queries were found")
+				} else {
+					for i, q := range queries {
+						fmt.Printf("\t%d) %s\n", i+1, q.Name)
+					}
+					res, err = prompt.LimitedPositiveInteger("Select a drama", len(queries))
+					if err != nil {
+						panic(err)
+					}
+					_, num := scraper.CheckNumber(strings.TrimSpace(res))
+					drama = queries[num-1]
+					link = drama.FullURL
+				}
+				episodes := scraper.GetEpisodes(drama)
+				DisplayEpisodesInfo(episodes)
+
+				res, err = prompt.String("Episode Range")
+				if err != nil {
+					panic(err)
+				}
+				episodeRange = scraper.GetRange(strings.TrimSpace(res))
+			} else {
+				link = scraper.FirstSearch(scraper.JoinArgs(args[:len(args)-1]))
+				episodeRange = scraper.GetRange(args[len(args)-1])
+			}
+			if link != "" {
 				// TODO: sanitize value of episode
-				episodes := scraper.GetEpisodesByLink(res)
-				episodeRange := scraper.GetRange(args[len(args)-1])
+				episodes := scraper.GetEpisodesByLink(link)
 				fmt.Printf("Attemping to download these episodes: %v\n\n", episodeRange)
 				for _, num := range episodeRange {
 					fmt.Printf("Looking for episode %d...\n", num)
