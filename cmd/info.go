@@ -26,11 +26,16 @@ var infoCmd = &cobra.Command{
 		fmt.Printf("Displaying info for '%s'\n", link)
 		// TODO: show info about description
 		fmt.Printf("\n%d Episodes Available\n\n", len(res))
-		for _, e := range res {
-			fmt.Printf("Episode %d was available on %s --> %s\n",
-				e.Number, e.Date, scraper.URL+e.Link)
-		}
+		DisplayEpisodesInfo(res)
 	},
+}
+
+// DisplayEpisodesInfo - Lists all all the information about a list of episodes
+func DisplayEpisodesInfo(episodes []scraper.EpisodeInfo) {
+	for _, e := range episodes {
+		fmt.Printf("Episode %d was available on %s --> %s\n",
+			e.Number, e.Date, scraper.URL+e.Link)
+	}
 }
 
 func init() {
