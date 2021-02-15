@@ -3,11 +3,13 @@ package scraper
 import (
 	"fmt"
 	"os"
+	"path"
 	"time"
+
+	"dcs/config"
 
 	"github.com/cavaliercoder/grab"
 	"github.com/cheggaaa/pb/v3"
-	"github.com/mitchellh/go-homedir"
 )
 
 // DownloadInfo - Information you need to Download
@@ -20,17 +22,14 @@ type DownloadInfo struct {
 // Download - Download something
 func Download(info DownloadInfo) error {
 	start := time.Now()
+	var err error
 
 	// Paths
-	home, err := homedir.Dir()
-	if err != nil {
-		return err
-	}
 	folder := info.Name
 	episode := fmt.Sprintf("ep%d.mp4", info.Num)
 	// TODO: config download location
-	dir := fmt.Sprintf("%s/Downloads/DCS/%s", home, folder)
-	path := dir + "/" + episode
+	dir := path.Join(config.DownloadPath(), folder)
+	path := path.Join(dir, episode)
 
 	// Create paths and directories
 	fmt.Printf("Creating path '%s'\n\n", dir)
