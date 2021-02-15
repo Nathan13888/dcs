@@ -1,7 +1,7 @@
 TODO.md
 .vscode
 
-dcs
+bin/
 
 # Binaries for programs and plugins
 *.exe
