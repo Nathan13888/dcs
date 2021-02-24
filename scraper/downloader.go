@@ -1,6 +1,7 @@
 package scraper
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -24,12 +25,10 @@ func Download(info DownloadInfo) error {
 	start := time.Now()
 	var err error
 
-	// Paths
-	folder := info.Name
-	episode := fmt.Sprintf("ep%d.mp4", info.Num)
-	// TODO: config download location
-	dir := path.Join(config.DownloadPath(), folder)
-	path := path.Join(dir, episode)
+	pathInfo := GetPath(info)
+	dir := pathInfo.Dir
+	path := pathInfo.Path
+	partPath := path + ".part"
 
 	// Create paths and directories
 	fmt.Printf("Creating path '%s'\n\n", dir)
@@ -38,13 +37,20 @@ func Download(info DownloadInfo) error {
 		return err
 	}
 
+	// Check if something is already downloaded
+	if Lookup(path) {
+		fmt.Printf("The desired file '%s' has been already downloaded...\n", path)
+		return errors.New("the download location '" + path + "' already contains the episode")
+	}
+	// TODO: more advanced lookup and incorporate checksums
+
 	setupTime := time.Since(start)
 
 	// TODO: look up if target file exists and show prompt; accept flags
 
 	// Start downloading
 	client := grab.NewClient()
-	req, _ := grab.NewRequest(path+".part", info.Link)
+	req, _ := grab.NewRequest(partPath, info.Link)
 	fmt.Printf("Downloading '%v'\n\n", req.URL())
 	res := client.Do(req)
 	fmt.Printf("Response: %v\n\n", res.HTTPResponse.Status)
@@ -90,6 +96,30 @@ Loop:
 	return nil
 }
 
-func Lookup() bool {
-	return false
+// Lookup - Check if downloaded content exists
+func Lookup(path string) bool {
+	_, err := os.Stat(path)
+	return !os.IsNotExist(err)
+}
+
+// PathInfo - Path information about downloaded content
+type PathInfo struct {
+	Folder  string
+	Episode string
+	Dir     string
+	Path    string
+}
+
+// GetPath - Get PathInfo based on DownloadInfo
+func GetPath(info DownloadInfo) PathInfo {
+	folder := info.Name
+	episode := fmt.Sprintf("ep%d.mp4", info.Num)
+	dir := path.Join(config.DownloadPath(), folder)
+	path := path.Join(dir, episode)
+	return PathInfo{
+		Folder:  folder,
+		Episode: episode,
+		Dir:     dir,
+		Path:    path,
+	}
 }
