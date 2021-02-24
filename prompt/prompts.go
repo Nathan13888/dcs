@@ -3,10 +3,39 @@ package prompt
 import (
 	"dcs/scraper"
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/manifoldco/promptui"
 )
+
+// DirSelect - Prompt for choosing a file/folder
+func DirSelect(label string, files []os.FileInfo, foldersOnly bool) (os.FileInfo, error) {
+	var displayed = make(map[string]os.FileInfo)
+	for _, f := range files {
+		if !foldersOnly || f.IsDir() {
+			displayed[f.Name()] = f
+		}
+	}
+	names := make([]string, 0, len(displayed))
+	for k := range displayed {
+		names = append(names, k)
+	}
+	// TODO: sort files/folders by date
+	p := promptui.Select{
+		Label: label,
+		Items: names,
+	}
+	_, res, err := p.Run()
+	if err != nil {
+		panic(err)
+	}
+	file, exists := displayed[res]
+	if !exists {
+		panic(errors.New("'" + res + "' could not be found"))
+	}
+	return file, err
+}
 
 // Confirm - Prompt for comfirmation
 func Confirm(label string) (string, error) {
