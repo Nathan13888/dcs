@@ -16,13 +16,13 @@ func TestPing(t *testing.T) {
 		"bbbbbbbbbbbbbbbbbbbbbbbbbbb.com",
 	}
 	for _, x := range validLinks {
-		res := Ping(x)
+		res := Ping(x, 443)
 		if !res {
 			t.Errorf("Problem pinging expected link, %s", x)
 		}
 	}
 	for _, y := range invalidLinks {
-		res := Ping(y)
+		res := Ping(y, 443)
 		if res {
 			t.Errorf("Problem pinging unexpected link, %s", y)
 		}

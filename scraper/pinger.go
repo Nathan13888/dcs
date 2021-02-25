@@ -8,13 +8,12 @@ import (
 
 // PingDC - Ping Dramacool
 func PingDC() bool {
-	return Ping("watchasian.cc")
+	return Ping("watchasian.cc", 443)
 }
 
 // Ping - Ping a website to see if it's online (defaults to HTTPS)
-func Ping(url string) bool {
+func Ping(url string, port int) bool {
 	// DEFAULTS to HTTPS port
-	port := 443
 	timeout := time.Duration(3 * time.Second)
 	_, err := net.DialTimeout(
 		"tcp",
