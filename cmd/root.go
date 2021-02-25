@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"dcs/config"
 	"fmt"
 	"os"
 	"path"
@@ -67,7 +68,7 @@ func initConfig() {
 		viper.AddConfigPath("/etc/dcs/")
 		viper.AddConfigPath(".")
 
-		viper.SetDefault("DownloadPath", path.Join(home, "Downloads", "DCS"))
+		config.SetDefaults(home)
 
 		// err = viper.ReadInConfig()
 		// if err != nil {
