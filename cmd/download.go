@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"dcs/downloader"
 	"dcs/prompt"
 	"dcs/scraper"
 	"fmt"
@@ -94,7 +95,7 @@ func download(link string) {
 		fmt.Printf("Found '%s'\n\n", link)
 		// TODO: prompt confirm download
 		fmt.Println("Downloading...")
-		err := scraper.Download(scraper.DownloadInfo{
+		err := downloader.Get(downloader.DownloadInfo{
 			Link: link,
 			Name: ajax.Name,
 			Num:  ajax.Num,

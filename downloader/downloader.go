@@ -1,4 +1,4 @@
-package scraper
+package downloader
 
 import (
 	"errors"
@@ -20,8 +20,8 @@ type DownloadInfo struct {
 	Num  int
 }
 
-// Download - Download something
-func Download(info DownloadInfo) error {
+// Get - Download something
+func Get(info DownloadInfo) error {
 	start := time.Now()
 	var err error
 
