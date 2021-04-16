@@ -91,7 +91,7 @@ func download(link string) {
 	if ajax.Found {
 		fmt.Printf("Attemping to download from '%s'\n\n", link)
 		fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
-		link := scraper.ScrapeEpisode(ajax)
+		link := scraper.ScrapeAjax(ajax)
 		fmt.Printf("Found '%s'\n\n", link)
 		// TODO: prompt confirm download
 		fmt.Println("Downloading...")
