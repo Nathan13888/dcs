@@ -6,8 +6,65 @@ import (
 	"os"
 	"strings"
 
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/manifoldco/promptui"
 )
+
+func Drama(dramas []scraper.DramaInfo) (*scraper.DramaInfo, error) {
+	type DramaItem struct {
+		Name     string
+		Link     string
+		Year     string
+		Episodes string
+		Desc     string
+		Info     *scraper.DramaInfo
+	}
+
+	items := []DramaItem{}
+	for _, d := range dramas {
+		items = append(items, DramaItem{
+			Name: d.Name,
+			Link: d.FullURL,
+			Info: &d,
+		})
+	}
+
+	// how the prompt should be displayed
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . | white | bold }}",
+		Active:   "\U0001F449 {{ .Name | green | bold }} [{{ .Year | cyan }}]",
+		Inactive: "  {{ .Name | red }} [{{ .Year | cyan }}]",
+		Selected: "\U0001F449 {{ .Name | green }}",
+		Details: `
+
+{{ .Name | blue | bold}}
+{{ "----------------------------" | white }}
+{{ "Link:" | faint }}	{{ .Link | yellow }}`, // TODO: add more properties
+	}
+
+	// for using the SEARCH feature in the prompt
+	searcher := func(input string, index int) bool {
+		item := items[index]
+		properties := []string{
+			item.Name, item.Year,
+		}
+
+		return len(fuzzy.FindNormalizedFold(input, properties)) > 0
+	}
+
+	// settings for the prompt
+	prompt := promptui.Select{
+		Label:     "Select a Drama:",
+		Items:     items,
+		Templates: templates,
+		Size:      9,
+		Searcher:  searcher,
+	}
+
+	i, _, err := prompt.Run()
+
+	return items[i].Info, err
+}
 
 // DirSelect - Prompt for choosing a file/folder
 func DirSelect(label string, files []os.FileInfo, foldersOnly bool) (os.FileInfo, error) {
