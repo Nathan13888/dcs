@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // configCmd represents the config command
@@ -12,7 +13,12 @@ var configCmd = &cobra.Command{
 	Short: "Change a config setting",
 	Long:  `It's complicated...`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("config called")
+		if len(args) == 1 {
+			prop := args[0]
+			fmt.Printf("Config property `%s` is set to `%s`\n", prop, viper.GetString(prop))
+		} else {
+			fmt.Println("This command currently only displays config values.")
+		}
 	},
 }
 
