@@ -20,6 +20,9 @@ var downloadCmd = &cobra.Command{
 	USAGE: download  -->  (for interactive prompt)
 	USAGE: download <link to episode>
 	USAGE: download <name of drama> <episode range>`,
+	Aliases: []string{
+		"down", "d",
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: sanitize arguments
 		if len(args) == 1 && scraper.IsLink(args[0]) {
@@ -31,26 +34,18 @@ var downloadCmd = &cobra.Command{
 				var res string
 				var err error
 				var drama scraper.DramaInfo
-				res, err = prompt.String("Search")
+				showRecent, err := cmd.Flags().GetBool("recent")
 				if err != nil {
 					panic(err)
 				}
-				// recent := config.GetRecentDownloads()
-				queries := scraper.Search(res)
-				if len(queries) == 0 {
-					// TODO: don't PANIC
-					panic("no queries were found")
+				if showRecent {
+					drama = *searchRecent()
 				} else {
-					resInfo, err := prompt.Drama(queries)
-					if err != nil {
-						panic(err)
-					}
-					drama = *resInfo
-					//TODO: more rigorous checking
+					drama = *searchDrama()
 					link = drama.FullURL
 				}
 
-				config.AddRecentDownload(drama.SubURL)
+				config.AddRecentDownload(&drama)
 
 				episodes := scraper.GetEpisodes(drama)
 				DisplayEpisodesInfo(episodes)
@@ -90,6 +85,36 @@ var downloadCmd = &cobra.Command{
 	},
 }
 
+func searchRecent() *scraper.DramaInfo {
+	recent := config.GetRecentDownloads()
+	res, err := prompt.Drama(recent)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func searchDrama() *scraper.DramaInfo {
+	var drama *scraper.DramaInfo
+	res, err := prompt.String("Search")
+	if err != nil {
+		panic(err)
+	}
+	queries := scraper.Search(res)
+	if len(queries) == 0 {
+		// TODO: don't PANIC
+		panic("no queries were found")
+	} else {
+		resInfo, err := prompt.Drama(queries)
+		if err != nil {
+			panic(err)
+		}
+		drama = resInfo
+		//TODO: more rigorous checking
+	}
+	return drama
+}
+
 func download(link string) {
 	ajax := scraper.GetAjax(link)
 	if ajax.Found {
@@ -114,6 +139,8 @@ func download(link string) {
 
 func init() {
 	rootCmd.AddCommand(downloadCmd)
+
+	downloadCmd.Flags().BoolP("recent", "r", false, "Display recently downloaded dramas")
 
 	// Here you will define your flags and configuration settings.
 
