@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"dcs/config"
 	"dcs/downloader"
 	"dcs/prompt"
 	"dcs/scraper"
@@ -16,6 +17,7 @@ var downloadCmd = &cobra.Command{
 	Short: "Download an episode or episodes of a drama",
 	Long: `Download anything from DCS that you want.
 
+	USAGE: download  -->  (for interactive prompt)
 	USAGE: download <link to episode>
 	USAGE: download <name of drama> <episode range>`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -33,21 +35,23 @@ var downloadCmd = &cobra.Command{
 				if err != nil {
 					panic(err)
 				}
+				// recent := config.GetRecentDownloads()
 				queries := scraper.Search(res)
 				if len(queries) == 0 {
+					// TODO: don't PANIC
 					panic("no queries were found")
 				} else {
-					for i, q := range queries {
-						fmt.Printf("\t%d) %s\n", i+1, q.Name)
-					}
-					res, err = prompt.LimitedPositiveInteger("Select a drama", len(queries))
+					resInfo, err := prompt.Drama(queries)
 					if err != nil {
 						panic(err)
 					}
-					_, num := scraper.CheckNumber(strings.TrimSpace(res))
-					drama = queries[num-1]
+					drama = *resInfo
+					//TODO: more rigorous checking
 					link = drama.FullURL
 				}
+
+				config.AddRecentDownload(drama.SubURL)
+
 				episodes := scraper.GetEpisodes(drama)
 				DisplayEpisodesInfo(episodes)
 
