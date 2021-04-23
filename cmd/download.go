@@ -42,8 +42,8 @@ var downloadCmd = &cobra.Command{
 					drama = *searchRecent()
 				} else {
 					drama = *searchDrama()
-					link = drama.FullURL
 				}
+				link = drama.FullURL
 
 				config.AddRecentDownload(&drama)
 
@@ -87,9 +87,28 @@ var downloadCmd = &cobra.Command{
 
 func searchRecent() *scraper.DramaInfo {
 	recent := config.GetRecentDownloads()
-	res, err := prompt.Drama(recent)
+	if len(recent) == 0 {
+		fmt.Println("No recent history. Searching instead.")
+		return searchDrama()
+	}
+	searchItem := scraper.DramaInfo{
+		Name:    "* SEARCH INSTEAD *",
+		FullURL: "/link-to-no-where",
+		SubURL:  "/link-to-no-where",
+		Domain:  "notadomain.com",
+	}
+
+	// res, err := prompt.Drama(append([]scraper.DramaInfo{searchItem}, recent...))
+	res, err := prompt.Drama(append(recent, searchItem))
 	if err != nil {
 		panic(err)
+	}
+
+	// fmt.Println(res)
+	// fmt.Println(searchItem)
+	if *res == searchItem {
+		fmt.Println("Searching for drama instead.")
+		return searchDrama()
 	}
 	return res
 }
