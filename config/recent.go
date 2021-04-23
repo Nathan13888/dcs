@@ -1,9 +1,12 @@
 package config
 
 import (
+	"dcs/scraper"
 	"fmt"
 	"os"
 	"path"
+	"strings"
+	"time"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -11,9 +14,10 @@ import (
 
 var configHome string
 var recentsConfigPath string
+var timeFormat = "Jan-02-06_15:04:05"
 
 var recentsConfig = viper.New()
-var recentDownloads []string = make([]string, 0)
+var recentDownloads map[string][]string = make(map[string][]string)
 var recentSearches []string = make([]string, 0)
 
 func ConfigRecents() {
@@ -34,7 +38,7 @@ func ConfigRecents() {
 	// If a config file is found, read it in.
 	if err = recentsConfig.ReadInConfig(); err == nil {
 		// fmt.Println("Using config file:", recentsConfig.ConfigFileUsed())
-		recentDownloads = recentsConfig.GetStringSlice("downloads")
+		recentDownloads = recentsConfig.GetStringMapStringSlice("downloads")
 		recentSearches = recentsConfig.GetStringSlice("searches")
 	} else if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		os.MkdirAll(configHome, 0755)
@@ -52,9 +56,12 @@ func SyncRecents() {
 	recentsConfig.WriteConfigAs(recentsConfigPath)
 }
 
-func AddRecentDownload(subURL string) {
-	// fmt.Println(subURL)
-	recentDownloads = append(recentDownloads, subURL)
+func AddRecentDownload(info *scraper.DramaInfo) {
+	recentDownloads[strings.ToLower(info.Name)] = []string{
+		time.Now().Format(timeFormat),
+		info.Name,
+		info.SubURL,
+	}
 	SyncRecents()
 }
 
@@ -63,8 +70,24 @@ func AddRecentSearch(s string) {
 	SyncRecents()
 }
 
-func GetRecentDownloads() []string {
-	return recentDownloads
+func GetRecentDownloads() []scraper.DramaInfo {
+	var dramas []scraper.DramaInfo
+	for key, props := range recentDownloads {
+		if len(props) >= 2 {
+			panic(fmt.Errorf("invalid properties for key `%s`: %s", key, props))
+		}
+		name := props[1]
+		subURL := props[2]
+
+		dramas = append(dramas, scraper.DramaInfo{
+			FullURL: scraper.URL + subURL,
+			SubURL:  subURL,
+			Domain:  scraper.URL,
+			Name:    name,
+		})
+	}
+
+	return dramas
 }
 
 func GetRecentSearches() []string {
