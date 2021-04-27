@@ -73,7 +73,7 @@ func AddRecentSearch(s string) {
 func GetRecentDownloads() []scraper.DramaInfo {
 	var dramas []scraper.DramaInfo
 	for key, props := range recentDownloads {
-		if len(props) >= 2 {
+		if !(len(props) >= 2) {
 			panic(fmt.Errorf("invalid properties for key `%s`: %s", key, props))
 		}
 		name := props[1]
