@@ -20,13 +20,14 @@ func Drama(dramas []scraper.DramaInfo) (*scraper.DramaInfo, error) {
 		Info     *scraper.DramaInfo
 	}
 
-	items := []DramaItem{}
-	for _, d := range dramas {
-		items = append(items, DramaItem{
+	items := make([]DramaItem, len(dramas))
+	for i := 0; i < len(dramas); i++ {
+		d := &dramas[i]
+		items[i] = DramaItem{
 			Name: d.Name,
 			Link: d.FullURL,
-			Info: &d,
-		})
+			Info: d,
+		}
 	}
 
 	// how the prompt should be displayed
