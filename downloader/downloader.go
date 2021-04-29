@@ -33,7 +33,7 @@ type DownloadProperties struct {
 func Get(info DownloadInfo, prop DownloadProperties) error {
 	overwrite := prop.Overwrite
 	interactive := prop.Interactive
-	// ignorem3u8 := prop.IgnoreM3U8
+	ignorem3u8 := prop.IgnoreM3U8
 
 	start := time.Now()
 	var err error
@@ -74,14 +74,16 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 	setupTime := time.Since(start)
 	downloadStart := time.Now()
 
-	// TODO: look up if target file exists and show prompt; accept flags
-
 	fmt.Printf("Downloading '%s' EPISODE %d (%v)'\n\n", info.Name, info.Num, info.Link)
-	if strings.HasSuffix(info.Link, ".mp4") {
+	if strings.HasSuffix(info.Link, ".mp4") { // is MP4
 		err = DownloadMP4(info, path, partPath)
-	} else if strings.HasSuffix(info.Link, ".m3u8") {
-		err = DownloadM3U8(info.Link, path)
-	} else {
+	} else if strings.HasSuffix(info.Link, ".m3u8") { // is M3U8
+		if !ignorem3u8 || (interactive && prompt.Confirm("Would you like to download M3U8 still?")) { // m3u8 is not ignored OR interactive prompt is confirmed
+			err = DownloadM3U8(info.Link, path)
+		} else { //m3u8 is ignored
+			return fmt.Errorf("m3u8 is ignored")
+		}
+	} else { // unknown
 		return errors.New("unsupported file ending from '" + info.Link + "'")
 	}
 	if err != nil {
