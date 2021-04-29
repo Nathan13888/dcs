@@ -23,8 +23,18 @@ type DownloadInfo struct {
 	Num  int
 }
 
+type DownloadProperties struct {
+	Overwrite   bool
+	Interactive bool
+	IgnoreM3U8  bool
+}
+
 // Get - Download something
-func Get(info DownloadInfo, overwrite bool, interactive bool) error {
+func Get(info DownloadInfo, prop DownloadProperties) error {
+	overwrite := prop.Overwrite
+	interactive := prop.Interactive
+	// ignorem3u8 := prop.IgnoreM3U8
+
 	start := time.Now()
 	var err error
 
