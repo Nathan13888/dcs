@@ -25,8 +25,17 @@ var downloadCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: sanitize arguments
+		overwrite, err := cmd.Flags().GetBool("overwrite")
+		if err != nil {
+			panic(err)
+		}
+		interactive, err := cmd.Flags().GetBool("interactive")
+		if err != nil {
+			panic(err)
+		}
+
 		if len(args) == 1 && scraper.IsLink(args[0]) {
-			download(args[0])
+			download(args[0], overwrite, interactive)
 		} else {
 			var link string
 			var episodeRange []int
@@ -34,11 +43,11 @@ var downloadCmd = &cobra.Command{
 				var res string
 				var err error
 				var drama scraper.DramaInfo
-				showRecent, err := cmd.Flags().GetBool("recent")
+				showRecent, err := cmd.Flags().GetBool("no-recent")
 				if err != nil {
 					panic(err)
 				}
-				if showRecent {
+				if !showRecent {
 					drama = *searchRecent()
 				} else {
 					drama = *searchDrama()
@@ -72,7 +81,7 @@ var downloadCmd = &cobra.Command{
 						}
 					}
 					if len(episodes) >= num || url == "" {
-						download(scraper.URL + url)
+						download(scraper.URL+url, overwrite, interactive)
 					} else {
 						fmt.Printf("Episode %d was not available", num)
 					}
@@ -134,7 +143,7 @@ func searchDrama() *scraper.DramaInfo {
 	return drama
 }
 
-func download(link string) {
+func download(link string, overwrite bool, interactive bool) {
 	ajax := scraper.GetAjax(link)
 	if ajax.Found {
 		fmt.Printf("Attemping to download from '%s'\n\n", link)
@@ -147,7 +156,7 @@ func download(link string) {
 			Link: link,
 			Name: ajax.Name,
 			Num:  ajax.Num,
-		})
+		}, overwrite, interactive)
 		if err != nil {
 			panic(err)
 		}
@@ -159,7 +168,9 @@ func download(link string) {
 func init() {
 	rootCmd.AddCommand(downloadCmd)
 
-	downloadCmd.Flags().BoolP("recent", "r", false, "Display recently downloaded dramas")
+	downloadCmd.Flags().BoolP("no-recent", "n", false, "Do not display recently downloaded dramas")
+	downloadCmd.Flags().BoolP("overwrite", "o", false, "Overwrite if episode exists")
+	downloadCmd.Flags().BoolP("interactive", "i", true, "Prompt to overwrite episode; important for automated download")
 
 	// Here you will define your flags and configuration settings.
 

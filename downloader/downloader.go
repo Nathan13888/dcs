@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"dcs/config"
+	"dcs/prompt"
 
 	"github.com/Nathan13888/m3u8/dl"
 	"github.com/cavaliercoder/grab"
@@ -23,7 +24,7 @@ type DownloadInfo struct {
 }
 
 // Get - Download something
-func Get(info DownloadInfo) error {
+func Get(info DownloadInfo, overwrite bool, interactive bool) error {
 	start := time.Now()
 	var err error
 
@@ -42,7 +43,21 @@ func Get(info DownloadInfo) error {
 	// Check if something is already downloaded
 	if Lookup(path) {
 		fmt.Printf("The desired file '%s' has been already downloaded...\n", path)
-		return errors.New("the download location '" + path + "' already contains the episode")
+		if overwrite {
+			fmt.Printf("\nOverwriting '%s' because of OVERWRITE flag...\n", path)
+		} else if interactive {
+			if prompt.Confirm("Would you like to overwrite file?") {
+				fmt.Printf("\nRemoving '%s'\n\n", path)
+				err = os.Remove(path)
+				if err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("user chose to not overwrite existing file")
+			}
+		} else {
+			return fmt.Errorf("the download location '%s' already contains the episode", path)
+		}
 	}
 	// TODO: more advanced lookup and incorporate checksums
 
@@ -51,7 +66,7 @@ func Get(info DownloadInfo) error {
 
 	// TODO: look up if target file exists and show prompt; accept flags
 
-	fmt.Printf("Downloading '%v'\n\n", info.Link)
+	fmt.Printf("Downloading '%s' EPISODE %d (%v)'\n\n", info.Name, info.Num, info.Link)
 	if strings.HasSuffix(info.Link, ".mp4") {
 		err = DownloadMP4(info, path, partPath)
 	} else if strings.HasSuffix(info.Link, ".m3u8") {
@@ -64,6 +79,9 @@ func Get(info DownloadInfo) error {
 	}
 
 	downloadTime := time.Since(downloadStart)
+
+	fmt.Printf("\nFinished downloading '%s' EPISODE %d\n\n", info.Name, info.Num)
+
 	// TODO: Scrap Time
 	fmt.Printf("* Setup Time      >> %v\n", setupTime)
 	fmt.Printf("* Download Time   >> %v\n", downloadTime)
@@ -120,7 +138,7 @@ func DownloadM3U8(url string, p string) error {
 
 	streams := 4 // number of concurrent downloaders
 	tmpPath := p + "_m3u8files"
-	mergedFile := path.Join(tmpPath, "merged.ts")
+	mergedFile := path.Join(tmpPath, "main.ts")
 
 	downloader, err := dl.NewTask(tmpPath, url)
 	if err != nil {
