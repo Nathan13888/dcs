@@ -96,16 +96,22 @@ func DirSelect(label string, files []os.FileInfo, foldersOnly bool) (os.FileInfo
 }
 
 // Confirm - Prompt for comfirmation
-func Confirm(label string) (string, error) {
+func Confirm(label string) bool {
 	p := promptui.Prompt{
 		Label:     label,
 		IsConfirm: true,
+		Default:   "N",
 	}
-	res, err := p.Run()
-	if err != nil {
-		panic(err)
+	res, _ := p.Run()
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	if strings.EqualFold(res, "Y") {
+		return true
+	} else {
+		return false
 	}
-	return res, err
 }
 
 // String - Prompt for a string input
