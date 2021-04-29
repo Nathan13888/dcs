@@ -63,7 +63,9 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 					return err
 				}
 			} else {
-				return fmt.Errorf("user chose to not overwrite existing file")
+				fmt.Printf("\nSKIPPING download for '%s'...\n\n", path)
+				return nil
+				// return fmt.Errorf("user chose to not overwrite existing file")
 			}
 		} else {
 			return fmt.Errorf("the download location '%s' already contains the episode", path)
