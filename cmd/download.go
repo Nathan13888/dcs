@@ -117,8 +117,7 @@ func searchRecent() *scraper.DramaInfo {
 		Domain:  "notadomain.com",
 	}
 
-	// res, err := prompt.Drama(append([]scraper.DramaInfo{searchItem}, recent...))
-	res, err := prompt.Drama(append(recent, searchItem))
+	res, err := prompt.Drama(append([]scraper.DramaInfo{searchItem}, recent...))
 	if err != nil {
 		panic(err)
 	}
@@ -181,7 +180,7 @@ func init() {
 	downloadCmd.Flags().BoolP("no-recent", "n", false, "Do not display recently downloaded dramas")
 	downloadCmd.Flags().BoolP("overwrite", "o", false, "Overwrite if episode exists")
 	downloadCmd.Flags().BoolP("no-interactive", "i", false, "Prompt to overwrite episode; important for automated download")
-	downloadCmd.Flags().BoolP("dont-ignore-m3u8", "m", false, "Ignore m3u8 downloads")
+	downloadCmd.Flags().BoolP("dont-ignore-m3u8", "m", false, "Download M3U8 files")
 
 	// Here you will define your flags and configuration settings.
 
