@@ -66,6 +66,16 @@ var downloadCmd = &cobra.Command{
 
 				config.AddRecentDownload(&drama)
 
+				// if interactive; needs to invert because of flag
+				if !interactive {
+					cnt := downloader.DisplayEpisodes(drama.Name)
+					if cnt == 0 {
+						fmt.Print("No episodes found.\n\n")
+					} else {
+						fmt.Printf("\nFound %d episodes\n\n", cnt)
+					}
+				}
+
 				episodes := scraper.GetEpisodes(drama)
 				DisplayEpisodesInfo(episodes)
 

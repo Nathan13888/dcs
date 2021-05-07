@@ -3,8 +3,10 @@ package downloader
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -175,6 +177,36 @@ func DownloadM3U8(url string, p string) error {
 	}
 
 	return err
+}
+
+// TODO: improve results and make caller handle results
+func DisplayEpisodes(name string) int {
+	cnt := 0
+	path := path.Join(config.DownloadPath(), name)
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return cnt
+	} else if !os.IsExist(err) && err != nil {
+		panic(err)
+	}
+
+	files, err := ioutil.ReadDir(path)
+	// might not be cool to crash because someone gave this shit to read
+	if err != nil {
+		panic(err)
+	}
+
+	mediaExtensions := []string{".mp4"}
+	for _, file := range files {
+		for _, ext := range mediaExtensions {
+			if strings.EqualFold(ext, filepath.Ext(file.Name())) {
+				fmt.Printf("FOUND: %s\n", file.Name())
+				cnt++
+				break
+			}
+		}
+	}
+	return cnt
 }
 
 // Lookup - Check if downloaded content exists
