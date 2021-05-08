@@ -48,10 +48,12 @@ func GetEpisodes(drama DramaInfo) []EpisodeInfo {
 			fullname := strings.Trim(ee.DOM.Contents().Text(), " \n")
 			time := strings.Trim(parent.ChildrenFiltered("span.time").Text(), " \n")
 			// fmt.Printf("%s was posted %s\n", fullname, time)
-			num, err := strconv.ParseFloat(fullname[len(drama.Name)+9:], 64)
+			split := strings.Split(fullname, " ")
+			parse := split[len(split)-1]
+			num, err := strconv.ParseFloat(parse, 64)
 			if err != nil {
 				fmt.Println("ERROR: The episode number could not be interpreted...")
-				fmt.Print(err)
+				fmt.Println(err)
 			} else {
 				obj := EpisodeInfo{
 					Number: num,

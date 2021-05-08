@@ -43,6 +43,7 @@ func ScrapeAjax(ajax AjaxResult) string {
 	return link
 }
 
+// TODO: improve link searching
 // GetAjax - Find the link for the Ajax
 func GetAjax(episode string) AjaxResult {
 	res := AjaxResult{
