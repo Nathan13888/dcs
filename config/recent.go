@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
@@ -18,7 +19,8 @@ var timeFormat = "Jan-02-06_15:04:05"
 
 var recentsConfig = viper.New()
 var recentDownloads map[string][]string = make(map[string][]string)
-var recentSearches []string = make([]string, 0)
+
+// var recentSearches []string = make([]string, 0)
 
 func ConfigRecents() {
 	// Find home directory.
@@ -39,7 +41,7 @@ func ConfigRecents() {
 	if err = recentsConfig.ReadInConfig(); err == nil {
 		// fmt.Println("Using config file:", recentsConfig.ConfigFileUsed())
 		recentDownloads = recentsConfig.GetStringMapStringSlice("downloads")
-		recentSearches = recentsConfig.GetStringSlice("searches")
+		// recentSearches = recentsConfig.GetStringSlice("searches")
 	} else if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		os.MkdirAll(configHome, 0755)
 		recentsConfig.SafeWriteConfigAs(recentsConfigPath)
@@ -47,12 +49,11 @@ func ConfigRecents() {
 		panic(err)
 	}
 	recentsConfig.SetDefault("downloads", []string{})
-	recentsConfig.SetDefault("searches", []string{})
+	// recentsConfig.SetDefault("searches", []string{})
 }
 
-func SyncRecents() {
+func SaveRecentDownloads() {
 	recentsConfig.Set("downloads", recentDownloads)
-	recentsConfig.Set("searches", recentSearches)
 	recentsConfig.WriteConfigAs(recentsConfigPath)
 }
 
@@ -62,17 +63,50 @@ func AddRecentDownload(info *scraper.DramaInfo) {
 		info.Name,
 		info.SubURL,
 	}
-	SyncRecents()
+	SaveRecentDownloads()
 }
 
-func AddRecentSearch(s string) {
-	recentSearches = append(recentSearches, s)
-	SyncRecents()
+// func AddRecentSearch(s string) {
+// 	recentSearches = append(recentSearches, s)
+// 	SaveRecents()
+// }
+
+type RecentEntry struct {
+	key  string
+	time int
+}
+type REList []RecentEntry
+
+func (e REList) Len() int {
+	return len(e)
+}
+
+func (e REList) Less(i, j int) bool {
+	return e[i].time < e[j].time
+}
+
+func (e REList) Swap(i, j int) {
+	e[i], e[j] = e[j], e[i]
 }
 
 func GetRecentDownloads() []scraper.DramaInfo {
 	var dramas []scraper.DramaInfo
+	var sorted []RecentEntry
 	for key, props := range recentDownloads {
+		res, err := time.Parse(timeFormat, props[0])
+		if err != nil {
+			panic(err)
+		}
+		sorted = append(sorted, RecentEntry{
+			key:  key,
+			time: int(time.Since(res).Seconds()),
+		})
+	}
+
+	sort.Sort(REList(sorted))
+	for _, ent := range sorted {
+		key := ent.key
+		props := recentDownloads[key]
 		if !(len(props) >= 2) {
 			panic(fmt.Errorf("invalid properties for key `%s`: %s", key, props))
 		}
@@ -90,6 +124,6 @@ func GetRecentDownloads() []scraper.DramaInfo {
 	return dramas
 }
 
-func GetRecentSearches() []string {
-	return recentSearches
-}
+// func GetRecentSearches() []string {
+// 	return recentSearches
+// }
