@@ -33,7 +33,7 @@ var infoCmd = &cobra.Command{
 // DisplayEpisodesInfo - Lists all all the information about a list of episodes
 func DisplayEpisodesInfo(episodes []scraper.EpisodeInfo) {
 	for _, e := range episodes {
-		fmt.Printf("Episode %d was available on %s --> %s\n",
+		fmt.Printf("Episode %v was available on %s --> %s\n",
 			e.Number, e.Date, scraper.URL+e.Link)
 	}
 }

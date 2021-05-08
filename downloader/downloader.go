@@ -22,7 +22,7 @@ import (
 type DownloadInfo struct {
 	Link string
 	Name string
-	Num  int
+	Num  float64
 }
 
 type DownloadProperties struct {
@@ -78,7 +78,7 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 	setupTime := time.Since(start)
 	downloadStart := time.Now()
 
-	fmt.Printf("Downloading '%s' EPISODE %d (%v)'\n\n", info.Name, info.Num, info.Link)
+	fmt.Printf("Downloading '%s' EPISODE %v (%v)'\n\n", info.Name, info.Num, info.Link)
 	if strings.HasSuffix(info.Link, ".mp4") { // is MP4
 		err = DownloadMP4(info, path, partPath)
 	} else if strings.HasSuffix(info.Link, ".m3u8") { // is M3U8
@@ -96,7 +96,7 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 
 	downloadTime := time.Since(downloadStart)
 
-	fmt.Printf("\nFinished downloading '%s' EPISODE %d\n\n", info.Name, info.Num)
+	fmt.Printf("\nFinished downloading '%s' EPISODE %v\n\n", info.Name, info.Num)
 
 	// TODO: Scrap Time
 	fmt.Printf("* Setup Time      >> %v\n", setupTime)
@@ -226,7 +226,7 @@ type PathInfo struct {
 // GetPath - Get PathInfo based on DownloadInfo
 func GetPath(info DownloadInfo) PathInfo {
 	folder := info.Name
-	episode := fmt.Sprintf("ep%d.mp4", info.Num)
+	episode := fmt.Sprintf("ep%v.mp4", info.Num)
 	dir := path.Join(config.DownloadPath(), folder)
 	path := path.Join(dir, episode)
 	return PathInfo{

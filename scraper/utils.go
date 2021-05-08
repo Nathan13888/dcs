@@ -3,6 +3,7 @@ package scraper
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net"
 	"net/http"
 	"sort"
@@ -47,11 +48,11 @@ func getCollector() *colly.Collector {
 }
 
 // GetRange - Determine which numbers are included in a "range"; returns [] if range is invalid
-func GetRange(r string) []int {
+func GetRange(r string) []float64 {
 	// TODO: check if range is valid; valid characters: ,-0123456789
-	var res []int
+	var res []float64
 	exps := strings.Split(r, ",")
-	var candidates []int
+	var candidates []float64
 	for _, x := range exps {
 		isNum, num := CheckNumber(x)
 		if isNum {
@@ -62,24 +63,27 @@ func GetRange(r string) []int {
 			isAValid, a := CheckNumber(split[0])
 			isBValid, b := CheckNumber(split[1])
 			if isAValid && isBValid {
-				for i := a; i <= b; i++ {
+				candidates = append(candidates, a) // add starting position
+				candidates = append(candidates, b) // add ending position
+				for i := math.Ceil(a + 1); i < b; i++ {
 					candidates = append(candidates, i)
 				}
 			}
 		}
 	}
+	// filter duplicate values
 	for _, y := range candidates {
 		if sort.Search(len(candidates), func(i int) bool { return candidates[i] == y }) >= len(res) {
 			res = append(res, y)
 		}
 	}
-	sort.Ints(res)
+	sort.Float64s(res)
 	return res
 }
 
 // CheckNumber - Check if a string is a number
-func CheckNumber(num string) (bool, int) {
-	i, err := strconv.Atoi(num)
+func CheckNumber(num string) (bool, float64) {
+	i, err := strconv.ParseFloat(num, 64)
 	if err == nil {
 		return true, i
 	}

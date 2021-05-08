@@ -53,10 +53,11 @@ func GetAjax(episode string) AjaxResult {
 
 	c.OnHTML("div.watch-drama h1", func(e *colly.HTMLElement) {
 		num := strings.Split(strings.Trim(e.DOM.Text(), " \n"), " ")
-		// fmt.Println(num)
-		conv, err := strconv.Atoi(num[len(num)-1])
+		parse := num[len(num)-1]
+		conv, err := strconv.ParseFloat(parse, 64)
 		if err != nil {
 			fmt.Println(err)
+			// } else if conv == 0 {
 		} else {
 			res.Num = conv
 		}
@@ -91,7 +92,7 @@ func GetAjax(episode string) AjaxResult {
 type AjaxResult struct {
 	Found     bool
 	Name      string
-	Num       int
+	Num       float64
 	Ajax      string
 	Streaming string
 	Domain    string

@@ -48,7 +48,7 @@ var downloadCmd = &cobra.Command{
 			download(args[0], prop)
 		} else {
 			var link string
-			var episodeRange []int
+			var episodeRange []float64
 			if len(args) == 0 {
 				var res string
 				var err error
@@ -93,17 +93,24 @@ var downloadCmd = &cobra.Command{
 				episodes := scraper.GetEpisodesByLink(link)
 				fmt.Printf("Attemping to download these episodes: %v\n\n", episodeRange)
 				for _, num := range episodeRange {
-					fmt.Printf("Looking for episode %d...\n", num)
+					fmt.Printf("Looking for episode %v...\n", num)
 					var url string
 					for _, e := range episodes {
 						if e.Number == num {
 							url = e.Link
 						}
 					}
-					if len(episodes) >= num || url == "" {
+					containsEpisode := false
+					for _, ep := range episodes {
+						if ep.Number == num {
+							containsEpisode = true
+							break
+						}
+					}
+					if containsEpisode || url == "" {
 						download(scraper.URL+url, prop)
 					} else {
-						fmt.Printf("Episode %d was not available", num)
+						fmt.Printf("Episode %v was not available", num)
 					}
 				}
 			} else {
