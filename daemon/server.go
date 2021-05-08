@@ -1,17 +1,36 @@
 package daemon
 
 import (
+	"dcs/config"
+	"fmt"
 	"log"
 	"net/http"
+	"time"
+
+	"github.com/gorilla/mux"
 )
 
-var port = ":6969"
+// StartTime - start time of the daemon
+var StartTime time.Time
 
 // Start - start a HTTP API service
 func Start() {
-	log.Printf("Starting DCS Daemon at port %s\n\n", port[1:])
+	_, port := config.DaemonURL()
+	log.Printf("Starting DCS Daemon at port %d\n\n", port)
 
-	http.HandleFunc("/", handlePing)
-	http.HandleFunc("/ping", handlePing)
-	log.Fatal(http.ListenAndServe(port, nil))
+	r := mux.NewRouter()
+	server := &http.Server{
+		Handler:      r,
+		Addr:         fmt.Sprintf("0.0.0.0:%d", port),
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+
+	r.HandleFunc("/", handlePing).Methods("GET")
+	r.HandleFunc("/ping", handlePing).Methods("GET")
+	r.HandleFunc("/status", handlePing).Methods("GET")
+
+	StartTime = time.Now()
+
+	log.Fatal(server.ListenAndServe())
 }
