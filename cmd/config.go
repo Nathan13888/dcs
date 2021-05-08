@@ -12,13 +12,10 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Change a config setting",
 	Long:  `It's complicated...`,
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 1 {
-			prop := args[0]
-			fmt.Printf("Config property `%s` is set to `%s`\n", prop, viper.GetString(prop))
-		} else {
-			fmt.Println("This command currently only displays config values.")
-		}
+		prop := args[0]
+		fmt.Printf("Config property `%s` is set to `%s`\n", prop, viper.GetString(prop))
 	},
 }
 
