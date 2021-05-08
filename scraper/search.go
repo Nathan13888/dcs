@@ -10,10 +10,10 @@ import (
 
 // DramaInfo - Information about a drama
 type DramaInfo struct {
-	FullURL string
-	SubURL  string
-	Domain  string
-	Name    string
+	FullURL string `json:"fullurl"`
+	SubURL  string `json:"suburl"`
+	Domain  string `json:"domain"`
+	Name    string `json:"name"`
 }
 
 // Search - Search for something...

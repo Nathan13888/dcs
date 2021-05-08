@@ -6,6 +6,8 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/url"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -79,6 +81,13 @@ func GetRange(r string) []float64 {
 	}
 	sort.Float64s(res)
 	return res
+}
+
+// JoinURL combines several parts of URLs together into a string
+func JoinURL(a string, b string) string {
+	u, _ := url.Parse(a)
+	u.Path = path.Join(u.Path, b)
+	return u.String()
 }
 
 // CheckNumber - Check if a string is a number

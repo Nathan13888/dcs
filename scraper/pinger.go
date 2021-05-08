@@ -11,6 +11,7 @@ func PingDC() bool {
 	return Ping("watchasian.cc", 443)
 }
 
+// TODO: update what is this about
 // Ping - Ping a website to see if it's online (defaults to HTTPS)
 func Ping(url string, port int) bool {
 	// DEFAULTS to HTTPS port
