@@ -4,11 +4,9 @@ import (
 	"dcs/config"
 	"fmt"
 	"os"
-	"path"
 
 	"github.com/spf13/cobra"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
@@ -54,26 +52,7 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".dcs" (without extension).
-		viper.SetConfigName("config.json")
-		viper.SetConfigType("json")
-		viper.AddConfigPath(path.Join(home, ".dcs"))
-		viper.AddConfigPath("/etc/dcs/")
-		viper.AddConfigPath(".")
-
-		config.SetDefaults(home)
-
-		// err = viper.ReadInConfig()
-		// if err != nil {
-		// panic(err)
-		// }
+		config.Configure()
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

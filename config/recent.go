@@ -9,11 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
-var configHome string
 var recentsConfigPath string
 var timeFormat = "Jan-02-06_15:04:05"
 
@@ -23,27 +21,19 @@ var recentDownloads map[string][]string = make(map[string][]string)
 // var recentSearches []string = make([]string, 0)
 
 func ConfigRecents() {
-	// Find home directory.
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
 	// Search config in home directory with name ".dcs" (without extension).
-	configHome = path.Join(home, ".dcs")
-	recentsConfigPath = path.Join(configHome, "recent.json")
+	recentsConfigPath = path.Join(GetConfigHome(), "recent.json")
 	recentsConfig.SetConfigName("recent")
 	recentsConfig.SetConfigType("json")
-	recentsConfig.AddConfigPath(configHome)
+	recentsConfig.AddConfigPath(GetConfigHome())
 
 	// If a config file is found, read it in.
-	if err = recentsConfig.ReadInConfig(); err == nil {
+	if err := recentsConfig.ReadInConfig(); err == nil {
 		// fmt.Println("Using config file:", recentsConfig.ConfigFileUsed())
 		recentDownloads = recentsConfig.GetStringMapStringSlice("downloads")
 		// recentSearches = recentsConfig.GetStringSlice("searches")
 	} else if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-		os.MkdirAll(configHome, 0755)
+		os.MkdirAll(GetConfigHome(), 0755)
 		recentsConfig.SafeWriteConfigAs(recentsConfigPath)
 	} else {
 		panic(err)
