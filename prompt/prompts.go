@@ -153,21 +153,21 @@ func PositiveInteger(label string) (string, error) {
 }
 
 // LimitedPositiveInteger - Prompt for a positive integer with an upper bound
-func LimitedPositiveInteger(label string, upper int) (string, error) {
-	p := promptui.Prompt{
-		Label: label,
-		Validate: func(input string) error {
-			trimmed := strings.TrimSpace(input)
-			isNum, num := scraper.CheckNumber(trimmed)
-			if !isNum || num > upper {
-				return errors.New(trimmed + " is not valid")
-			}
-			return nil
-		},
-	}
-	res, err := p.Run()
-	if err != nil {
-		panic(err)
-	}
-	return res, err
-}
+// func LimitedPositiveInteger(label string, upper int) (string, error) {
+// 	p := promptui.Prompt{
+// 		Label: label,
+// 		Validate: func(input string) error {
+// 			trimmed := strings.TrimSpace(input)
+// 			isNum, num := scraper.CheckNumber(trimmed)
+// 			if !isNum || num > upper {
+// 				return errors.New(trimmed + " is not valid")
+// 			}
+// 			return nil
+// 		},
+// 	}
+// 	res, err := p.Run()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return res, err
+// }
