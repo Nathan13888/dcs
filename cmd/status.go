@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"dcs/config"
+	"dcs/scraper"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -14,7 +16,17 @@ var statusCmd = &cobra.Command{
 
 	USAGE: service status`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("status called")
+		host, port := config.DaemonURL()
+		fmt.Printf("Displaying information about `%s:%d`\n\n", host, port)
+
+		// TODO: change to pinging API
+		online := scraper.Ping(host, port)
+		// TODO: display extra stats about online server
+		if online {
+			fmt.Println("Status: Online")
+		} else {
+			fmt.Println("Status: Offline")
+		}
 	},
 }
 
