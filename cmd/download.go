@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"bytes"
 	"dcs/config"
+	"dcs/daemon"
 	"dcs/downloader"
 	"dcs/prompt"
 	"dcs/scraper"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -37,11 +41,22 @@ var downloadCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		remote, err := cmd.Flags().GetBool("remote")
+		if err != nil {
+			panic(err)
+		}
+		if remote {
+			if !scraper.Ping(config.DaemonURL()) {
+				panic(fmt.Errorf("remote server NOT online"))
+			}
+			interactive = false
+		}
 
 		prop := downloader.DownloadProperties{
 			Overwrite:   overwrite,
 			Interactive: !interactive,
 			IgnoreM3U8:  !ignorem3u8,
+			Remote:      remote,
 		}
 
 		if len(args) == 1 && scraper.IsLink(args[0]) {
@@ -58,13 +73,13 @@ var downloadCmd = &cobra.Command{
 					panic(err)
 				}
 				if !showRecent {
-					drama = *searchRecent()
+					drama = *searchRecent(remote)
 				} else {
 					drama = *searchDrama()
 				}
 				link = drama.FullURL
 
-				config.AddRecentDownload(&drama)
+				updateRecent(&drama, remote)
 
 				// if interactive; needs to invert because of flag
 				if !interactive {
@@ -121,8 +136,63 @@ var downloadCmd = &cobra.Command{
 	},
 }
 
-func searchRecent() *scraper.DramaInfo {
-	recent := config.GetRecentDownloads()
+func updateRecent(drama *scraper.DramaInfo, remote bool) {
+	if remote {
+		server, port := config.DaemonURL()
+
+		// TODO: change protocol
+		url := scraper.JoinURL(fmt.Sprintf("http://%s:%d", server, port), "api/recentdownload")
+
+		json, err := json.Marshal(*drama)
+		if err != nil {
+			panic(err)
+		}
+
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(json))
+		if err != nil {
+			panic(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		defer res.Body.Close()
+
+		fmt.Printf("Received Status: %s\n\n", res.Status)
+	} else {
+		config.AddRecentDownload(drama)
+	}
+}
+
+func searchRecent(remote bool) *scraper.DramaInfo {
+	var recent []scraper.DramaInfo
+	if remote {
+		server, port := config.DaemonURL()
+		fmt.Printf("Requesting recent downloads from REMOTE %s:%d ...\n\n", server, port)
+
+		var obj []scraper.DramaInfo
+		// TODO: change protocol
+		url := scraper.JoinURL(fmt.Sprintf("http://%s:%d", server, port), "api/recentdownloads")
+
+		res, err := http.Get(url)
+		if err != nil {
+			panic(err)
+		}
+		defer res.Body.Close()
+		decoder := json.NewDecoder(res.Body)
+		decoder.DisallowUnknownFields()
+		err = decoder.Decode(&obj)
+		if err != nil {
+			panic(err)
+		}
+
+		recent = obj
+	} else {
+		recent = config.GetRecentDownloads()
+	}
 	if len(recent) == 0 {
 		fmt.Println("No recent history. Searching instead.")
 		return searchDrama()
@@ -170,6 +240,8 @@ func searchDrama() *scraper.DramaInfo {
 }
 
 func download(link string, prop downloader.DownloadProperties) {
+	remote := prop.Remote
+
 	ajax := scraper.GetAjax(link)
 	if ajax.Found {
 		fmt.Printf("Attemping to download from '%s'\n\n", link)
@@ -177,14 +249,56 @@ func download(link string, prop downloader.DownloadProperties) {
 		link := scraper.ScrapeAjax(ajax)
 		fmt.Printf("Found '%s'\n\n", link)
 		// TODO: prompt confirm download
-		fmt.Println("Downloading...")
-		err := downloader.Get(downloader.DownloadInfo{
+		dinfo := downloader.DownloadInfo{
 			Link: link,
 			Name: ajax.Name,
 			Num:  ajax.Num,
-		}, prop)
-		if err != nil {
-			panic(err)
+		}
+		if remote {
+			server, port := config.DaemonURL()
+
+			// TODO: change protocol
+			url := scraper.JoinURL(fmt.Sprintf("http://%s:%d", server, port), "api/download")
+
+			jobinfo, err := json.Marshal(daemon.DownloadRequest{
+				DInfo: dinfo,
+				Props: prop,
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			req, err := http.NewRequest("POST", url, bytes.NewBuffer(jobinfo))
+			if err != nil {
+				panic(err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+
+			client := &http.Client{}
+			res, err := client.Do(req)
+			if err != nil {
+				panic(err)
+			}
+			defer res.Body.Close()
+
+			var job daemon.DownloadJob
+			fmt.Printf("Received Status: %s\n", res.Status)
+			decoder := json.NewDecoder(res.Body)
+			decoder.DisallowUnknownFields()
+			err = decoder.Decode(&job)
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Printf("Job ID:     %s\n", job.ID)
+			fmt.Printf("Job Status: %s\n\n", job.Status)
+			fmt.Printf("Job downloads %s EPISODE %v\n", job.Req.DInfo.Name, job.Req.DInfo.Num)
+		} else {
+			fmt.Println("Downloading...")
+			err := downloader.Get(dinfo, prop)
+			if err != nil {
+				panic(err)
+			}
 		}
 	} else {
 		fmt.Print("FAILED to find episode...\n\n")
@@ -198,6 +312,7 @@ func init() {
 	downloadCmd.Flags().BoolP("overwrite", "o", false, "Overwrite if episode exists")
 	downloadCmd.Flags().BoolP("no-interactive", "i", false, "Prompt to overwrite episode; important for automated download")
 	downloadCmd.Flags().BoolP("dont-ignore-m3u8", "m", false, "Download M3U8 files")
+	downloadCmd.Flags().BoolP("remote", "r", false, "Download from remote server")
 
 	// Here you will define your flags and configuration settings.
 

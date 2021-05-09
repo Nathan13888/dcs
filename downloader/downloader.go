@@ -29,6 +29,7 @@ type DownloadProperties struct {
 	Overwrite   bool
 	Interactive bool
 	IgnoreM3U8  bool
+	Remote      bool
 }
 
 // Get - Download something
