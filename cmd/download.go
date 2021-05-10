@@ -3,10 +3,10 @@ package cmd
 import (
 	"bytes"
 	"dcs/config"
-	"dcs/daemon"
 	"dcs/downloader"
 	"dcs/prompt"
 	"dcs/scraper"
+	"dcs/server"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -255,12 +255,12 @@ func download(link string, prop downloader.DownloadProperties) {
 			Num:  ajax.Num,
 		}
 		if remote {
-			server, port := config.DaemonURL()
+			ip, port := config.DaemonURL()
 
 			// TODO: change protocol
-			url := scraper.JoinURL(fmt.Sprintf("http://%s:%d", server, port), "api/download")
+			url := scraper.JoinURL(fmt.Sprintf("http://%s:%d", ip, port), "api/download")
 
-			jobinfo, err := json.Marshal(daemon.DownloadRequest{
+			jobinfo, err := json.Marshal(server.DownloadRequest{
 				DInfo: dinfo,
 				Props: prop,
 			})
@@ -281,7 +281,7 @@ func download(link string, prop downloader.DownloadProperties) {
 			}
 			defer res.Body.Close()
 
-			var job daemon.DownloadJob
+			var job server.DownloadJob
 			fmt.Printf("Received Status: %s\n", res.Status)
 			decoder := json.NewDecoder(res.Body)
 			decoder.DisallowUnknownFields()

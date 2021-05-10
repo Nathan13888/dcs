@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"dcs/daemon"
+	"dcs/server"
 
 	"github.com/spf13/cobra"
 )
@@ -18,7 +18,7 @@ var startCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		daemon.Start(debug)
+		server.Start(debug)
 	},
 }
 
