@@ -12,9 +12,10 @@ type DownloadRequest struct {
 type DownloadStatus string
 
 const (
+	QueuedJob   DownloadStatus = "queued"
 	RunningJob  DownloadStatus = "running"
-	FailedJob   DownloadStatus = "failed"
 	StaledJob   DownloadStatus = "staled"
+	FailedJob   DownloadStatus = "failed"
 	CompleteJob DownloadStatus = "complete"
 )
 
