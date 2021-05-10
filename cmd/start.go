@@ -14,12 +14,17 @@ var startCmd = &cobra.Command{
 
 	Usage: service start`,
 	Run: func(cmd *cobra.Command, args []string) {
-		daemon.Start()
+		debug, err := cmd.Flags().GetBool("debug")
+		if err != nil {
+			panic(err)
+		}
+		daemon.Start(debug)
 	},
 }
 
 func init() {
 	serviceCmd.AddCommand(startCmd)
+	startCmd.Flags().BoolP("debug", "d", false, "Debug mode")
 
 	// Here you will define your flags and configuration settings.
 
