@@ -15,7 +15,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
 	github.com/golang/protobuf v1.4.3 // indirect
-	github.com/google/uuid v1.2.0 // indirect
+	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/lithammer/fuzzysearch v1.1.1
@@ -25,6 +25,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/oopsguy/m3u8 v0.0.0-20190630112258-4150e93ec8f4 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
+	github.com/rs/zerolog v1.21.0
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
