@@ -21,8 +21,7 @@ type PingResponse struct {
 	CollectionSize int64   `json:"size"`
 }
 
-func handlePing(w http.ResponseWriter, r *http.Request) {
-	log.Println("PING from", r.UserAgent())
+func getStatus(w http.ResponseWriter, r *http.Request) {
 	res := PingResponse{
 		Uptime:     time.Since(StartTime).Minutes(),
 		Downloaded: downloader.Size(config.DownloadPath()),
@@ -31,13 +30,11 @@ func handlePing(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRecentDownloads(w http.ResponseWriter, r *http.Request) {
-	log.Println("GET recent downloads")
 	res := config.GetRecentDownloads()
 	json.NewEncoder(w).Encode(res)
 }
 
 func postRecentDownload(w http.ResponseWriter, r *http.Request) {
-	log.Println("POST recent download")
 	info := scraper.DramaInfo{}
 	if err := json.NewDecoder(r.Body).Decode(&info); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -59,8 +56,6 @@ func postRecentDownload(w http.ResponseWriter, r *http.Request) {
 }
 
 func postDownload(w http.ResponseWriter, r *http.Request) {
-	log.Println("POST download")
-
 	var dreq DownloadRequest
 	if err := json.NewDecoder(r.Body).Decode(&dreq); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -70,12 +65,13 @@ func postDownload(w http.ResponseWriter, r *http.Request) {
 	// create
 	job := DownloadJob{
 		ID:     strings.ReplaceAll(uuid.New().String(), "-", ""),
-		Status: RunningJob,
+		Status: QueuedJob,
 		Req:    dreq,
 	}
 	log.Printf("Adding new downloading job for '%s EPISODE %v' (%s))\n",
 		dreq.DInfo.Name, dreq.DInfo.Num, job.ID)
 	AddJob(job)
+	StartJob(job.ID)
 
 	// return information about job
 	response, err := json.Marshal(&job)
