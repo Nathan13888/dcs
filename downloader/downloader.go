@@ -3,34 +3,17 @@ package downloader
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
-	"dcs/config"
 	"dcs/prompt"
 
 	"github.com/Nathan13888/m3u8/dl"
 	"github.com/cavaliercoder/grab"
 	"github.com/cheggaaa/pb/v3"
 )
-
-// DownloadInfo - Information you need to Download
-type DownloadInfo struct {
-	Link string
-	Name string
-	Num  float64
-}
-
-type DownloadProperties struct {
-	Overwrite   bool
-	Interactive bool
-	IgnoreM3U8  bool
-	Remote      bool
-}
 
 // Get - Download something
 func Get(info DownloadInfo, prop DownloadProperties) error {
@@ -178,62 +161,4 @@ func DownloadM3U8(url string, p string) error {
 	}
 
 	return err
-}
-
-// TODO: improve results and make caller handle results
-func DisplayEpisodes(name string) int {
-	cnt := 0
-	path := path.Join(config.DownloadPath(), name)
-	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return cnt
-	} else if !os.IsExist(err) && err != nil {
-		panic(err)
-	}
-
-	files, err := ioutil.ReadDir(path)
-	// might not be cool to crash because someone gave this shit to read
-	if err != nil {
-		panic(err)
-	}
-
-	mediaExtensions := []string{".mp4"}
-	for _, file := range files {
-		for _, ext := range mediaExtensions {
-			if strings.EqualFold(ext, filepath.Ext(file.Name())) {
-				fmt.Printf("FOUND: %s\n", file.Name())
-				cnt++
-				break
-			}
-		}
-	}
-	return cnt
-}
-
-// Lookup - Check if downloaded content exists
-func Lookup(path string) bool {
-	_, err := os.Stat(path)
-	return !os.IsNotExist(err)
-}
-
-// PathInfo - Path information about downloaded content
-type PathInfo struct {
-	Folder  string
-	Episode string
-	Dir     string
-	Path    string
-}
-
-// GetPath - Get PathInfo based on DownloadInfo
-func GetPath(info DownloadInfo) PathInfo {
-	folder := info.Name
-	episode := fmt.Sprintf("ep%v.mp4", info.Num)
-	dir := path.Join(config.DownloadPath(), folder)
-	path := path.Join(dir, episode)
-	return PathInfo{
-		Folder:  folder,
-		Episode: episode,
-		Dir:     dir,
-		Path:    path,
-	}
 }
