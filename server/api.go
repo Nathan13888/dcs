@@ -2,8 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +11,7 @@ import (
 	"dcs/scraper"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 type PingResponse struct {
@@ -41,13 +40,13 @@ func postRecentDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Adding new recent download `%s`\n", info.Name)
+	log.Info().Msgf("Adding new recent download `%s`", info.Name)
 
 	config.AddRecentDownload(&info)
 
 	response, err := json.Marshal(&info)
 	if err != nil {
-		fmt.Println(err)
+		logError(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -68,15 +67,15 @@ func postDownload(w http.ResponseWriter, r *http.Request) {
 		Status: QueuedJob,
 		Req:    dreq,
 	}
-	log.Printf("Adding new downloading job for '%s EPISODE %v' (%s))\n",
+	log.Info().Msgf("Adding new downloading job for '%s EPISODE %v' (%s)",
 		dreq.DInfo.Name, dreq.DInfo.Num, job.ID)
-	AddJob(job)
+	AddJob(&job)
 	StartJob(job.ID)
 
 	// return information about job
 	response, err := json.Marshal(&job)
 	if err != nil {
-		fmt.Println(err)
+		logError(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
