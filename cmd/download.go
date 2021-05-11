@@ -49,7 +49,6 @@ var downloadCmd = &cobra.Command{
 			if !scraper.Ping(config.DaemonURL()) {
 				panic(fmt.Errorf("remote server NOT online"))
 			}
-			interactive = false
 		}
 
 		prop := downloader.DownloadProperties{
