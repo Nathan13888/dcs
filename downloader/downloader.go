@@ -3,6 +3,7 @@ package downloader
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -17,6 +18,11 @@ import (
 
 // Get - Download something
 func Get(info DownloadInfo, prop DownloadProperties) error {
+	var writer io.Writer = os.Stdout
+	if info.Logger != nil {
+		writer = info.Logger
+	}
+
 	overwrite := prop.Overwrite
 	interactive := prop.Interactive
 	ignorem3u8 := prop.IgnoreM3U8
@@ -30,7 +36,7 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 	partPath := path + ".part"
 
 	// Create paths and directories
-	fmt.Printf("Creating path '%s'\n\n", dir)
+	LogInfo(writer, "Creating path '%s'\n\n", dir)
 	err = os.MkdirAll(dir, 0755)
 	if err != nil {
 		return err
@@ -38,18 +44,18 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 
 	// Check if something is already downloaded
 	if Lookup(path) {
-		fmt.Printf("The desired file '%s' has been already downloaded...\n", path)
+		LogInfo(writer, "The desired file '%s' has been already downloaded...\n", path)
 		if overwrite {
-			fmt.Printf("\nOverwriting '%s' because of OVERWRITE flag...\n", path)
+			LogInfo(writer, "\nOverwriting '%s' because of OVERWRITE flag...\n", path)
 		} else if interactive {
 			if prompt.Confirm("Would you like to overwrite file?") {
-				fmt.Printf("\nRemoving '%s'\n\n", path)
+				LogInfo(writer, "\nRemoving '%s'\n\n", path)
 				err = os.Remove(path)
 				if err != nil {
 					return err
 				}
 			} else {
-				fmt.Printf("\nSKIPPING download for '%s'...\n\n", path)
+				LogInfo(writer, "\nSKIPPING download for '%s'...\n\n", path)
 				return nil
 				// return fmt.Errorf("user chose to not overwrite existing file")
 			}
@@ -64,12 +70,12 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 
 	fmt.Printf("Downloading '%s' EPISODE %v (%v)'\n\n", info.Name, info.Num, info.Link)
 	if strings.HasSuffix(info.Link, ".mp4") { // is MP4
-		err = DownloadMP4(info, path, partPath)
+		err = DownloadMP4(writer, info, path, partPath)
 	} else if strings.HasSuffix(info.Link, ".m3u8") { // is M3U8
 		if !ignorem3u8 || (interactive && prompt.Confirm("Would you like to download M3U8 still?")) { // m3u8 is not ignored OR interactive prompt is confirmed
-			err = DownloadM3U8(info.Link, path)
+			err = DownloadM3U8(writer, info.Link, path)
 		} else { //m3u8 is ignored
-			return fmt.Errorf("m3u8 is ignored")
+			return errors.New("m3u8 is ignored")
 		}
 	} else { // unknown
 		return errors.New("unsupported file ending from '" + info.Link + "'")
@@ -80,22 +86,23 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 
 	downloadTime := time.Since(downloadStart)
 
-	fmt.Printf("\nFinished downloading '%s' EPISODE %v\n\n", info.Name, info.Num)
+	LogInfo(writer, "\nFinished downloading '%s' EPISODE %v\n\n", info.Name, info.Num)
 
 	// TODO: Scrap Time
-	fmt.Printf("* Setup Time      >> %v\n", setupTime)
-	fmt.Printf("* Download Time   >> %v\n", downloadTime)
+	LogInfo(writer, "* Setup Time      >> %v\n", setupTime)
+	LogInfo(writer, "* Download Time   >> %v\n", downloadTime)
 
 	return nil
 }
 
-func DownloadMP4(info DownloadInfo, path string, partPath string) error {
+func DownloadMP4(writer io.Writer, info DownloadInfo, path string, partPath string) error {
 	var err error
+
 	// Start downloading
 	client := grab.NewClient()
 	req, _ := grab.NewRequest(partPath, info.Link)
 	res := client.Do(req)
-	fmt.Printf("Response: %v\n\n", res.HTTPResponse.Status)
+	LogInfo(writer, "Response: %v\n\n", res.HTTPResponse.Status)
 
 	t := time.NewTicker(500 * time.Millisecond)
 	defer t.Stop()
@@ -104,6 +111,7 @@ func DownloadMP4(info DownloadInfo, path string, partPath string) error {
 	bar.SetRefreshRate(500 * time.Millisecond)
 	bar.Set(pb.Bytes, true)
 	bar.Set(pb.SIBytesPrefix, true)
+	bar.SetWriter(writer)
 	if err = bar.Err(); err != nil {
 		return err
 	}
@@ -124,7 +132,7 @@ Loop:
 		return err
 	}
 
-	fmt.Printf("\nDownload completed. Renaming file to final destination.\n\n")
+	LogInfo(writer, "\nDownload completed. Renaming file to final destination.\n\n")
 	err = os.Rename(partPath, path)
 	if err != nil {
 		return err
@@ -133,7 +141,7 @@ Loop:
 	return nil
 }
 
-func DownloadM3U8(url string, p string) error {
+func DownloadM3U8(writer io.Writer, url string, p string) error {
 	var err error
 
 	streams := 4 // number of concurrent downloaders
@@ -144,17 +152,18 @@ func DownloadM3U8(url string, p string) error {
 	if err != nil {
 		return err
 	}
+	// TODO: redirect output
 	if err := downloader.Start(streams); err != nil {
 		return err
 	}
 
-	fmt.Printf("\nFinished merging M3U8 files. Renaming file to final destination.\n\n")
+	LogInfo(writer, "\nFinished merging M3U8 files. Renaming file to final destination.\n\n")
 	err = os.Rename(mergedFile, p)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Cleaning up... Removing '%s'\n\n", tmpPath)
+	LogInfo(writer, "Cleaning up... Removing '%s'\n\n", tmpPath)
 	err = os.RemoveAll(tmpPath)
 	if err != nil {
 		return err

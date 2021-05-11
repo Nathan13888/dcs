@@ -1,10 +1,13 @@
 package downloader
 
+import "io"
+
 // DownloadInfo - Information you need to Download
 type DownloadInfo struct {
-	Link string
-	Name string
-	Num  float64
+	Link   string
+	Name   string
+	Num    float64
+	Logger io.Writer
 }
 
 type DownloadProperties struct {

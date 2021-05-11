@@ -3,12 +3,17 @@ package downloader
 import (
 	"dcs/config"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 )
+
+func LogInfo(writer io.Writer, format string, a ...interface{}) {
+	fmt.Fprintf(writer, format, a...)
+}
 
 // TODO: improve results and make caller handle results
 func DisplayEpisodes(name string) int {
