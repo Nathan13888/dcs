@@ -68,7 +68,7 @@ func Get(info DownloadInfo, prop DownloadProperties) error {
 	setupTime := time.Since(start)
 	downloadStart := time.Now()
 
-	fmt.Printf("Downloading '%s' EPISODE %v (%v)'\n\n", info.Name, info.Num, info.Link)
+	LogInfo(writer, "Downloading '%s' EPISODE %v (%v)'\n\n", info.Name, info.Num, info.Link)
 	if strings.HasSuffix(info.Link, ".mp4") { // is MP4
 		err = DownloadMP4(writer, info, path, partPath)
 	} else if strings.HasSuffix(info.Link, ".m3u8") { // is M3U8
