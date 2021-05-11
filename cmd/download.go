@@ -311,7 +311,6 @@ func init() {
 	downloadCmd.Flags().BoolP("overwrite", "o", false, "Overwrite if episode exists")
 	downloadCmd.Flags().BoolP("no-interactive", "i", false, "Prompt to overwrite episode; important for automated download")
 	downloadCmd.Flags().BoolP("dont-ignore-m3u8", "m", false, "Download M3U8 files")
-	downloadCmd.Flags().BoolP("remote", "r", false, "Download from remote server")
 
 	// Here you will define your flags and configuration settings.
 
