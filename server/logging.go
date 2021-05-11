@@ -14,6 +14,7 @@ import (
 )
 
 var timeFormat = time.RFC3339
+var logDir string = path.Join(config.GetConfigHome(), "logs")
 
 func configureLogger() func() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
@@ -23,13 +24,13 @@ func configureLogger() func() {
 	zerolog.TimeFieldFormat = timeFormat
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
-	logDir := path.Join(config.GetConfigHome(), "logs")
-	os.MkdirAll(logDir, 0755)
-	logPath := path.Join(logDir, fmt.Sprintf("server-%s.log", time.Now().Format(timeFormat)))
-	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	err := os.MkdirAll(logDir, 0755)
 	if err != nil {
-		log.Error().Stack().Err(err).Msg("")
+		logError(err)
 	}
+
+	logName := fmt.Sprintf("server-%s.log", getTime())
+	logFile := getLogFile(logName)
 
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 	multi := zerolog.MultiLevelWriter(consoleWriter, logFile)
@@ -38,6 +39,10 @@ func configureLogger() func() {
 	return func() {
 		logFile.Close()
 	}
+}
+
+func logError(err error) {
+	log.Error().Stack().Err(err).Msg("")
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -52,7 +57,26 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func getJobLogger(job DownloadJob) zerolog.Logger {
-	jobLogger := log.With().Str("job_id", job.ID).Logger()
+func getJobLogger(job *DownloadJob) zerolog.Logger {
+	log.Info().Msgf("Created logger for JOB %s", job.ID)
+	jobLogFile := getLogFile(fmt.Sprintf("job-%s.log", job.ID))
+	// consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
+	// multi := zerolog.MultiLevelWriter(consoleWriter, jobLogFile)
+	jobLogger := zerolog.New(jobLogFile).With().Timestamp().
+		Str("job_id", job.ID).
+		Logger()
 	return jobLogger
+}
+
+func getLogFile(name string) *os.File {
+	logPath := path.Join(logDir, name)
+	logFile, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		logError(err)
+	}
+	return logFile
+}
+
+func getTime() string {
+	return time.Now().Format(timeFormat)
 }
