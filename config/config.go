@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+var IS_SERVER = false
 var saved_home string
 
 func GetHome() string {
@@ -36,6 +37,7 @@ func Configure() {
 	viper.AddConfigPath("/etc/dcs/")
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(".")
+	SetDefaults()
 
 	// err = viper.ReadInConfig()
 	// if err != nil {
@@ -43,7 +45,7 @@ func Configure() {
 	// }
 }
 
-func SetDefaults(home string) {
+func SetDefaults() {
 	viper.SetDefault("DownloadPath", path.Join(GetHome(), "Downloads", "DCS"))
 	viper.SetDefault("DaemonHost", "localhost")
 	viper.SetDefault("DaemonPort", 6969)
