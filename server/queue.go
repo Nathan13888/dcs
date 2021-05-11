@@ -2,15 +2,18 @@ package server
 
 import (
 	"dcs/downloader"
-	"log"
+
+	"github.com/rs/zerolog/log"
 )
 
 var jobs = make(map[string]*DownloadJob)
 
-func AddJob(job DownloadJob) {
+func AddJob(job *DownloadJob) {
 	log.Printf("Recording new job with ID %s\n", job.ID)
 
-	jobs[job.ID] = &job
+	job.Req.Props.Interactive = false
+	jobs[job.ID] = job
+	job.Status = QueuedJob
 }
 
 func StartJob(id string) {
@@ -22,8 +25,16 @@ func StartJob(id string) {
 	job := jobs[id]
 	job.Status = RunningJob
 	go func() {
-		// jobLogger:=log.New()
-		downloader.Get(job.Req.DInfo, job.Req.Props)
+		info := job.Req.DInfo
+		jobLogger := getJobLogger(job)
+		info.Logger = jobLogger
+
+		err := downloader.Get(info, job.Req.Props)
+		if err != nil {
+			job.Status = FailedJob
+			jobLogger.Error().Err(err).Msg("")
+		}
+		job.Status = CompleteJob
 	}()
 }
 
