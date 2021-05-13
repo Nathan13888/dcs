@@ -12,6 +12,13 @@ type StatusResponse struct {
 	LibrarySize        int64   `json:"size"`
 }
 
+type CollectionLookupResponse struct {
+	NumOfEpisodes      int      `json:"numOfEpisodes"`
+	DownloadedEpisodes []string `json:"downloadedEpisodes"`
+	Error              error    `json:"error"`
+	Size               int64    `json:"size"`
+}
+
 type DownloadRequest struct {
 	DInfo downloader.DownloadInfo       `json:"dinfo"`
 	Props downloader.DownloadProperties `json:"props"`

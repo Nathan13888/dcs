@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"dcs/scraper"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -43,6 +45,36 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 
 func getRecentDownloads(w http.ResponseWriter, r *http.Request) {
 	res := config.GetRecentDownloads()
+	json.NewEncoder(w).Encode(res)
+}
+
+func getLookupCollection(w http.ResponseWriter, r *http.Request) {
+	name, found := mux.Vars(r)["name"]
+	if !found {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	num, epNames, err := downloader.CollectionLookup(name)
+	if os.IsNotExist(err) {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	} else if err != nil {
+		logError(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	size, err := downloader.DirSize(name)
+	if err != nil {
+		logError(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	res := CollectionLookupResponse{
+		NumOfEpisodes:      num,
+		DownloadedEpisodes: epNames,
+		Error:              err,
+		Size:               size,
+	}
 	json.NewEncoder(w).Encode(res)
 }
 
