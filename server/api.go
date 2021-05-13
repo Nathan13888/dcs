@@ -36,7 +36,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		ProcessedRequests:  processedRequests,
 		DownloadedDramas:   dd,
 		DownloadedEpisodes: de,
-		CollectionSize:     csize,
+		LibrarySize:        csize,
 	}
 	json.NewEncoder(w).Encode(res)
 }

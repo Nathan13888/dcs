@@ -9,7 +9,7 @@ type StatusResponse struct {
 	ProcessedRequests  int64   `json:"processedRequests"`
 	DownloadedDramas   int     `json:"downloadedDramas"`
 	DownloadedEpisodes int     `json:"downloadedEpisodes"`
-	CollectionSize     int64   `json:"size"`
+	LibrarySize        int64   `json:"size"`
 }
 
 type DownloadRequest struct {
