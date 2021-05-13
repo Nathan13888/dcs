@@ -9,6 +9,7 @@ import (
 	"dcs/server"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 
@@ -80,20 +81,56 @@ var downloadCmd = &cobra.Command{
 
 				updateRecent(&drama, remote)
 
-				// if interactive; needs to invert because of flag
-				if !interactive {
-					cnt, episodes, err := downloader.GetEpisodeNames(drama.Name)
+				var cnt int
+				var epInfo []string
+				var csize int64
+
+				if remote {
+					var obj server.CollectionLookupResponse
+					u := GetRemoteURL("api/lookup/collection/" + drama.Name)
+					fmt.Println(u)
+
+					res, err := http.Get(u)
 					if err != nil {
 						panic(err)
 					}
-					if cnt == 0 {
-						fmt.Print("No episodes found.\n\n")
-					} else {
-						fmt.Printf("\nFound %d episodes:\n", cnt)
-						for _, e := range episodes {
-							fmt.Printf("FOUND %s\n", e)
-						}
+					defer res.Body.Close()
+
+					code := res.StatusCode
+					if code != http.StatusOK {
+						cnt = 0
+						goto DisplayFoundEpisodes
 					}
+
+					decoder := json.NewDecoder(res.Body)
+					decoder.DisallowUnknownFields()
+					err = decoder.Decode(&obj)
+					if err != nil {
+						panic(err)
+					}
+					cnt = obj.NumOfEpisodes
+					epInfo = obj.DownloadedEpisodes
+					// err = obj.Error
+					csize = obj.Size
+				} else {
+					cnt, epInfo, err = downloader.CollectionLookup(drama.Name)
+					if err != nil {
+						panic(err)
+					}
+					csize, err = downloader.DirSize(drama.Name)
+					if err != nil {
+						panic(err)
+					}
+				}
+			DisplayFoundEpisodes:
+				if cnt == 0 {
+					fmt.Print("No episodes found.\n\n")
+				} else {
+					fmt.Printf("\nFound %d episodes:\n", cnt)
+					for _, e := range epInfo {
+						fmt.Printf("FOUND %s\n", e)
+					}
+					fmt.Printf("\nTotal size of collection: %.3f GB\n\n", float64(csize)/math.Pow(1024, 3))
 				}
 
 				episodes := scraper.GetEpisodes(drama)
@@ -143,10 +180,7 @@ var downloadCmd = &cobra.Command{
 
 func updateRecent(drama *scraper.DramaInfo, remote bool) {
 	if remote {
-		server, port := config.DaemonURL()
-
-		// TODO: change protocol
-		url := scraper.JoinURL(fmt.Sprintf("http://%s:%d", server, port), "api/recentdownload")
+		url := GetRemoteURL("api/recentdownload")
 
 		json, err := json.Marshal(*drama)
 		if err != nil {
@@ -175,12 +209,8 @@ func updateRecent(drama *scraper.DramaInfo, remote bool) {
 func searchRecent(remote bool) *scraper.DramaInfo {
 	var recent []scraper.DramaInfo
 	if remote {
-		server, port := config.DaemonURL()
-		fmt.Printf("Requesting recent downloads from REMOTE %s:%d ...\n\n", server, port)
-
 		var obj []scraper.DramaInfo
-		// TODO: change protocol
-		url := scraper.JoinURL(fmt.Sprintf("http://%s:%d", server, port), "api/recentdownloads")
+		url := GetRemoteURL("api/recentdownloads")
 
 		res, err := http.Get(url)
 		if err != nil {
@@ -247,6 +277,8 @@ func searchDrama() *scraper.DramaInfo {
 func download(link string, prop downloader.DownloadProperties) {
 	remote := prop.Remote
 
+	url := GetRemoteURL("api/download")
+
 	ajax := scraper.GetAjax(link)
 	if ajax.Found {
 		fmt.Printf("Attemping to download from '%s'\n\n", link)
@@ -260,10 +292,8 @@ func download(link string, prop downloader.DownloadProperties) {
 			Num:  ajax.Num,
 		}
 		if remote {
-			ip, port := config.DaemonURL()
 
 			// TODO: change protocol
-			url := scraper.JoinURL(fmt.Sprintf("http://%s:%d", ip, port), "api/download")
 
 			jobinfo, err := json.Marshal(server.DownloadRequest{
 				DInfo: dinfo,

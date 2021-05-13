@@ -15,7 +15,7 @@ func LogInfo(writer io.Writer, format string, a ...interface{}) {
 	fmt.Fprintf(writer, format, a...)
 }
 
-func GetEpisodeNames(collection string) (int, []string, error) {
+func CollectionLookup(collection string) (int, []string, error) {
 	cnt := 0
 	var validEpisodes []string
 
@@ -88,7 +88,7 @@ func DownloadedEpisodes() (int, error) {
 	}
 	for _, info := range files {
 		if info.IsDir() {
-			c, _, err := GetEpisodeNames(info.Name())
+			c, _, err := CollectionLookup(info.Name())
 			if err != nil {
 				break // if statement at the end will process return
 			}
