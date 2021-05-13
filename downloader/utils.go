@@ -15,34 +15,33 @@ func LogInfo(writer io.Writer, format string, a ...interface{}) {
 	fmt.Fprintf(writer, format, a...)
 }
 
-// TODO: improve results and make caller handle results
-func DisplayEpisodes(name string) int {
+func GetEpisodeNames(collection string) (int, []string, error) {
 	cnt := 0
-	path := path.Join(config.DownloadPath(), name)
+	var validEpisodes []string
+
+	path := path.Join(config.DownloadPath(), collection)
 	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
-		return cnt
-	} else if !os.IsExist(err) && err != nil {
-		panic(err)
+	if err != nil {
+		return -1, validEpisodes, err
 	}
 
 	files, err := ioutil.ReadDir(path)
-	// might not be cool to crash because someone gave this shit to read
 	if err != nil {
-		panic(err)
+		return -1, validEpisodes, err
 	}
 
 	mediaExtensions := []string{".mp4"}
 	for _, file := range files {
 		for _, ext := range mediaExtensions {
 			if strings.EqualFold(ext, filepath.Ext(file.Name())) {
-				fmt.Printf("FOUND: %s\n", file.Name())
+				// fmt.Printf("FOUND: %s\n", file.Name())
+				validEpisodes = append(validEpisodes, file.Name())
 				cnt++
 				break
 			}
 		}
 	}
-	return cnt
+	return cnt, validEpisodes, nil
 }
 
 // Lookup - Check if downloaded content exists
@@ -65,6 +64,68 @@ func GetPath(info DownloadInfo) PathInfo {
 	}
 }
 
-func Size(rpath string) int {
-	return 0
+func DownloadedDramas() (int, error) {
+	cnt := 0
+	path := config.DownloadPath()
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return -1, err
+	}
+	for _, info := range files {
+		if info.IsDir() {
+			cnt++
+		}
+	}
+	return cnt, nil
+}
+
+func DownloadedEpisodes() (int, error) {
+	cnt := 0
+	path := config.DownloadPath()
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return -1, err
+	}
+	for _, info := range files {
+		if info.IsDir() {
+			c, _, err := GetEpisodeNames(info.Name())
+			if err != nil {
+				break // if statement at the end will process return
+			}
+			cnt += c
+		}
+	}
+	if err != nil {
+		return -1, err
+	}
+	return cnt, nil
+}
+
+func Size(rpath string) (int64, error) {
+	info, err := os.Stat(path.Join(config.DownloadPath(), rpath))
+	if err != nil {
+		return -1, err
+	}
+	if info.IsDir() {
+		return DirSize(rpath)
+	}
+	return info.Size(), nil
+}
+
+func DirSize(rpath string) (int64, error) {
+	var size int64
+	path := path.Join(config.DownloadPath(), rpath)
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return err
+	})
+	if err != nil {
+		return -1, err
+	}
+	return size, nil
 }

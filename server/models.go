@@ -4,6 +4,14 @@ import (
 	"dcs/downloader"
 )
 
+type StatusResponse struct {
+	Uptime             float64 `json:"uptime"`
+	ProcessedRequests  int64   `json:"processedRequests"`
+	DownloadedDramas   int     `json:"downloadedDramas"`
+	DownloadedEpisodes int     `json:"downloadedEpisodes"`
+	CollectionSize     int64   `json:"size"`
+}
+
 type DownloadRequest struct {
 	DInfo downloader.DownloadInfo       `json:"dinfo"`
 	Props downloader.DownloadProperties `json:"props"`

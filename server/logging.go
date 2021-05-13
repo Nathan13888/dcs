@@ -46,6 +46,7 @@ func logError(err error) {
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
+	processedRequests++
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Info().
 			Str("method", r.Method).

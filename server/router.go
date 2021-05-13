@@ -16,6 +16,7 @@ import (
 // StartTime - start time of the daemon
 var StartTime time.Time
 var DEBUGMODE = false
+var processedRequests int64 = 0
 
 // Start - start a HTTP API service
 func Start(debug bool) {
@@ -35,7 +36,7 @@ func Start(debug bool) {
 	}
 
 	r.HandleFunc("/", getStatus).Methods("GET")
-	r.HandleFunc("/ping", getStatus).Methods("GET")
+	r.HandleFunc("/ping", getPing).Methods("GET")
 	r.HandleFunc("/status", getStatus).Methods("GET")
 	r.HandleFunc("/api/recentdownloads", getRecentDownloads).Methods("GET")
 	r.HandleFunc("/api/recentdownload", postRecentDownload).Methods("POST")
@@ -53,7 +54,7 @@ func Start(debug bool) {
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			log.Err(err)
+			logError(err)
 		}
 	}()
 

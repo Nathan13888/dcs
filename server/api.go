@@ -14,16 +14,29 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type PingResponse struct {
-	Uptime         float64 `json:"uptime"`
-	Downloaded     int     `json:"downloaded"`
-	CollectionSize int64   `json:"size"`
+func getPing(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(200)
 }
 
 func getStatus(w http.ResponseWriter, r *http.Request) {
-	res := PingResponse{
-		Uptime:     time.Since(StartTime).Minutes(),
-		Downloaded: downloader.Size(config.DownloadPath()),
+	dd, err := downloader.DownloadedDramas()
+	if err != nil {
+		logError(err)
+	}
+	de, err := downloader.DownloadedEpisodes()
+	if err != nil {
+		logError(err)
+	}
+	csize, err := downloader.DirSize("")
+	if err != nil {
+		logError(err)
+	}
+	res := StatusResponse{
+		Uptime:             time.Since(StartTime).Seconds(),
+		ProcessedRequests:  processedRequests,
+		DownloadedDramas:   dd,
+		DownloadedEpisodes: de,
+		CollectionSize:     csize,
 	}
 	json.NewEncoder(w).Encode(res)
 }
