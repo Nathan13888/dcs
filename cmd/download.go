@@ -82,11 +82,17 @@ var downloadCmd = &cobra.Command{
 
 				// if interactive; needs to invert because of flag
 				if !interactive {
-					cnt := downloader.DisplayEpisodes(drama.Name)
+					cnt, episodes, err := downloader.GetEpisodeNames(drama.Name)
+					if err != nil {
+						panic(err)
+					}
 					if cnt == 0 {
 						fmt.Print("No episodes found.\n\n")
 					} else {
-						fmt.Printf("\nFound %d episodes\n\n", cnt)
+						fmt.Printf("\nFound %d episodes:\n", cnt)
+						for _, e := range episodes {
+							fmt.Printf("FOUND %s\n", e)
+						}
 					}
 				}
 
