@@ -2,7 +2,7 @@
 
 build:
 	# *** BUILDING DCS ***
-	go build -o bin/dcs
+	go build -o bin/dcs -ldflags "-X 'dcs/config.BuildUser=$$(id -u -n)' -X 'dcs/config.BuildTime=$$(date)' -s -w"
 
 install:
 	make build
