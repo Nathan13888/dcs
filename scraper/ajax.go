@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,7 +25,7 @@ func ScrapeAjax(ajax AjaxResult) string {
 	res, err := client.Do(req)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	defer res.Body.Close()
@@ -69,19 +68,21 @@ func GetAjax(episode string) AjaxResult {
 	})
 
 	c.OnHTML("div.watch_video iframe", func(e *colly.HTMLElement) {
-		src := e.Attr("src")
+		src := strings.Trim(e.Attr("src"), " /")
 		index := strings.Index(src, "streaming")
-		if src != "" && index != -1 {
+		if len(src) > 0 {
+			res.Found = true // TODO: better verification
 			streaming := src[index:]
 			res.Streaming = streaming
 			ajax := strings.Replace(streaming, "streaming", "ajax", 1)
 			res.Ajax = ajax
-			index2 := strings.Index(src, "embed")
-			if index2 != -1 {
-				res.Found = true
-				domain := src[index2:index]
-				res.Domain = domain
-			}
+			domain := src[:index]
+			res.Domain = domain
+			// fmt.Println(src)
+			// fmt.Println(streaming)
+			// fmt.Println(index)
+			// fmt.Println(streaming)
+			// fmt.Println(res.Domain)
 		}
 	})
 	c.Visit(episode)
