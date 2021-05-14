@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"dcs/config"
-	"dcs/scraper"
+	"dcs/server"
+	"encoding/json"
 	"fmt"
+	"math"
+	"net/http"
 
 	"github.com/spf13/cobra"
 )
@@ -19,14 +22,39 @@ var statusCmd = &cobra.Command{
 		host, port := config.DaemonURL()
 		fmt.Printf("Displaying information about `%s:%d`\n\n", host, port)
 
-		// TODO: change to pinging API
-		online := scraper.Ping(host, port)
-		// TODO: display extra stats about online server
-		if online {
-			fmt.Println("Status: Online")
-		} else {
-			fmt.Println("Status: Offline")
+		u := GetRemoteURL("status")
+
+		res, err := http.Get(u)
+		if err != nil {
+			// fmt.Println(err)
+			goto DeclareOffline
 		}
+		defer res.Body.Close()
+
+		if res.StatusCode == http.StatusOK {
+			fmt.Printf("*** ONLINE ***")
+			var obj server.StatusResponse
+
+			decoder := json.NewDecoder(res.Body)
+			decoder.DisallowUnknownFields()
+			err = decoder.Decode(&obj)
+			if err != nil {
+				panic(err)
+			}
+
+			ut_sec := math.Mod(obj.Uptime, 60)
+			ut_min := int((obj.Uptime - ut_sec) / 60)
+
+			fmt.Printf("\nUptime:            \t%d minutes %d seconds\n", ut_min, int(ut_sec))
+			fmt.Printf("Dramas:            \t%d\n", obj.DownloadedDramas)
+			fmt.Printf("Episodes:          \t%d\n", obj.DownloadedEpisodes)
+			fmt.Printf("Library Size:      \t%.3f GBs\n", float64(obj.LibrarySize)/math.Pow(1024, 3))
+			fmt.Printf("Processed Requests:\t%d\n", obj.ProcessedRequests)
+
+			return
+		}
+	DeclareOffline:
+		fmt.Println("*** OFFLINE ***")
 	},
 }
 
