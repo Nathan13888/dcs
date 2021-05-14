@@ -280,7 +280,7 @@ func download(link string, prop downloader.DownloadProperties) {
 	url := GetRemoteURL("api/download")
 
 	ajax := scraper.GetAjax(link)
-	if ajax.Found {
+	if ajax.Found || (prop.Interactive && prompt.Confirm("Ajax not found. Would you like to proceed downloading?")) {
 		fmt.Printf("Attemping to download from '%s'\n\n", link)
 		fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
 		link := scraper.ScrapeAjax(ajax)
@@ -337,6 +337,7 @@ func download(link string, prop downloader.DownloadProperties) {
 		}
 	} else {
 		fmt.Print("FAILED to find episode...\n\n")
+		fmt.Printf("Found AJAX: %v\n", ajax)
 	}
 }
 
