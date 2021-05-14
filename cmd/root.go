@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"dcs/config"
+	"dcs/scraper"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -26,6 +28,15 @@ Could be configured and also features a daemon to periodically check for new dra
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	url, err := rootCmd.PersistentFlags().GetString("url")
+	if err != nil {
+		fmt.Println(err)
+	}
+	newUrl := strings.Trim(url, " /")
+	if len(newUrl) > 0 {
+		fmt.Printf("New URL is not set to `%s`\n\n", newUrl)
+		scraper.URL = newUrl
+	}
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -39,6 +50,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+	rootCmd.PersistentFlags().StringP("url", "u", "", "specify DC url")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dcs.json)")
 	rootCmd.PersistentFlags().BoolP("remote", "r", false, "Download from remote server")
 	rootCmd.PersistentFlags().StringP("remote-host", "a", "", "Specify host address of remote DCS")
