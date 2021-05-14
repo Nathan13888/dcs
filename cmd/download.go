@@ -115,11 +115,11 @@ var downloadCmd = &cobra.Command{
 				} else {
 					cnt, epInfo, err = downloader.CollectionLookup(drama.Name)
 					if err != nil {
-						panic(err)
+						fmt.Println(err)
 					}
 					csize, err = downloader.DirSize(drama.Name)
 					if err != nil {
-						panic(err)
+						fmt.Println(err)
 					}
 				}
 			DisplayFoundEpisodes:
