@@ -87,10 +87,7 @@ var downloadCmd = &cobra.Command{
 
 				if remote {
 					var obj server.CollectionLookupResponse
-					u := GetRemoteURL("api/lookup/collection/" + drama.Name)
-					fmt.Println(u)
-
-					res, err := http.Get(u)
+					res, err := Request("GET", "api/lookup/collection/"+drama.Name)
 					if err != nil {
 						panic(err)
 					}
@@ -210,9 +207,7 @@ func searchRecent(remote bool) *scraper.DramaInfo {
 	var recent []scraper.DramaInfo
 	if remote {
 		var obj []scraper.DramaInfo
-		url := GetRemoteURL("api/recentdownloads")
-
-		res, err := http.Get(url)
+		res, err := Request("GET", "api/recentdownloads")
 		if err != nil {
 			panic(err)
 		}

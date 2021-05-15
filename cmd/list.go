@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"net/http"
 	"os"
 	"time"
 
@@ -19,9 +18,7 @@ var listCmd = &cobra.Command{
 	Short: "List of jobs",
 	Long:  `List download jobs on the remote`,
 	Run: func(cmd *cobra.Command, args []string) {
-		u := GetRemoteURL("api/jobs")
-
-		res, err := http.Get(u)
+		res, err := Request("GET", "api/jobs")
 		if err != nil {
 			panic(err)
 		}
@@ -36,10 +33,11 @@ var listCmd = &cobra.Command{
 		}
 
 		if len(jobs.Jobs) == 0 { // no jobs found
+			fmt.Println("No jobs found...")
 			return
 		}
 		if len(jobs.Jobs) != len(jobs.Sizes) {
-			panic(fmt.Errorf("invalid response received from %s", u))
+			panic(fmt.Errorf("invalid response received"))
 		}
 
 		table := tablewriter.NewWriter(os.Stdout)

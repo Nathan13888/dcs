@@ -22,9 +22,7 @@ var statusCmd = &cobra.Command{
 		host, port := config.DaemonURL()
 		fmt.Printf("Displaying information about `%s:%d`\n\n", host, port)
 
-		u := GetRemoteURL("status")
-
-		res, err := http.Get(u)
+		res, err := Request("GET", "status")
 		if err != nil {
 			// fmt.Println(err)
 			goto DeclareOffline

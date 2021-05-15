@@ -8,7 +8,6 @@ import (
 	"dcs/server"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -30,14 +29,14 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			panic(err)
 		}
-		u := GetRemoteURL("log")
+		var rp string = "log"
 		if len(job) > 0 { // display logs about job (if it exists)
-			u += "/job/" + job
+			rp += "/job/" + job
 		} else {
-			u += "/server"
+			rp += "/server"
 		}
 		// display logs of current remote session
-		res, err := http.Get(u)
+		res, err := Request("GET", rp)
 		if err != nil {
 			panic(err)
 		}
