@@ -172,6 +172,15 @@ func postDownload(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
+func getJobsList(w http.ResponseWriter, r *http.Request) {
+	jobs, sizes := GetJobInfo()
+	res := JobsResponse{
+		Jobs:  jobs,
+		Sizes: sizes,
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
 func internalError(w http.ResponseWriter, err error) {
 	logError(err)
 	w.WriteHeader(http.StatusInternalServerError)

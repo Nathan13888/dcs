@@ -46,3 +46,9 @@ type DownloadJob struct {
 	Status DownloadStatus  `json:"status"`
 	Req    DownloadRequest `json:"req"`
 }
+
+type JobsResponse struct {
+	Jobs  []DownloadJob `json:"jobs"`
+	Sizes []int64       `json:"sizes"`
+	// Num  int           `json:"numOfJobs"`
+}

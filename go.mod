@@ -23,6 +23,7 @@ require (
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/oopsguy/m3u8 v0.0.0-20190630112258-4150e93ec8f4 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/rs/zerolog v1.21.0

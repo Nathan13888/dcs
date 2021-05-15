@@ -2,6 +2,7 @@ package server
 
 import (
 	"dcs/downloader"
+	"os"
 
 	"github.com/rs/zerolog/log"
 )
@@ -36,6 +37,20 @@ func StartJob(id string) {
 		}
 		job.Status = CompleteJob
 	}()
+}
+
+func GetJobInfo() ([]DownloadJob, []int64) {
+	var ret []DownloadJob
+	var sizes []int64
+	for _, job := range jobs {
+		ret = append(ret, *job)
+		s, err := downloader.LookupEpisode(job.Req.DInfo)
+		if err != nil && !os.IsNotExist(err) {
+			logError(err)
+		}
+		sizes = append(sizes, s)
+	}
+	return ret, sizes
 }
 
 func JobExists(id string) bool {
