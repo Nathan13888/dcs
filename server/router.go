@@ -44,6 +44,7 @@ func Start(debug bool) {
 	r.HandleFunc("/api/recentdownload", postRecentDownload).Methods("POST")
 	r.HandleFunc("/api/lookup/collection/{name}", getLookupCollection).Methods("GET")
 	r.HandleFunc("/api/download", postDownload).Methods("POST")
+	r.PathPrefix("/content/").Handler(http.StripPrefix("/content/", http.FileServer(http.Dir(config.DownloadPath()))))
 
 	r.Use(loggingMiddleware)
 	closeLogger := configureLogger()
