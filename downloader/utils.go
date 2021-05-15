@@ -44,6 +44,16 @@ func CollectionLookup(collection string) (int, []string, error) {
 	return cnt, validEpisodes, nil
 }
 
+func LookupEpisode(info DownloadInfo) (int64, error) {
+	pi := GetPath(info)
+	p := pi.Path
+	stat, err := os.Stat(p)
+	if err != nil {
+		return -1, err
+	}
+	return stat.Size(), nil
+}
+
 // Lookup - Check if downloaded content exists
 func Lookup(path string) bool {
 	_, err := os.Stat(path)
