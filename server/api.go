@@ -3,6 +3,7 @@ package server
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -41,6 +42,8 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		DownloadedDramas:   dd,
 		DownloadedEpisodes: de,
 		LibrarySize:        csize,
+		Version:            config.BuildVersion,
+		BuildInfo:          fmt.Sprintf("Built on %s (by %s)", config.BuildTime, config.BuildUser),
 	}
 	json.NewEncoder(w).Encode(res)
 }

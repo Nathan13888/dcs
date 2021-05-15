@@ -45,11 +45,13 @@ var statusCmd = &cobra.Command{
 			ut_sec := math.Mod(obj.Uptime, 60)
 			ut_min := int((obj.Uptime - ut_sec) / 60)
 
-			fmt.Printf("\nUptime:            \t%d minutes %d seconds\n", ut_min, int(ut_sec))
+			fmt.Printf("\nUptime:          \t%d minutes %d seconds\n", ut_min, int(ut_sec))
 			fmt.Printf("Dramas:            \t%d\n", obj.DownloadedDramas)
 			fmt.Printf("Episodes:          \t%d\n", obj.DownloadedEpisodes)
 			fmt.Printf("Library Size:      \t%.3f GBs\n", float64(obj.LibrarySize)/math.Pow(1024, 3))
 			fmt.Printf("Processed Requests:\t%d\n", obj.ProcessedRequests)
+			fmt.Printf("DCS Version:       \t%s\n", obj.Version)
+			fmt.Printf("Build Info:        \t%s\n", obj.BuildInfo)
 
 			return
 		}

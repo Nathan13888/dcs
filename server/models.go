@@ -10,6 +10,8 @@ type StatusResponse struct {
 	DownloadedDramas   int     `json:"downloadedDramas"`
 	DownloadedEpisodes int     `json:"downloadedEpisodes"`
 	LibrarySize        int64   `json:"size"`
+	Version            string  `json:"version"`
+	BuildInfo          string  `json:"buildinfo"`
 }
 
 type LogLookupResponse struct {
