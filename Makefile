@@ -1,5 +1,10 @@
 .DEFAULT_GOAL := build-n-install
 
+update:
+	make build
+	pkill dcs
+	make install
+
 build-n-install:
 	make build
 	make install
