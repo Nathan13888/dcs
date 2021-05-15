@@ -104,14 +104,12 @@ func getLookupCollection(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	} else if err != nil {
-		logError(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		internalError(w, err)
 		return
 	}
 	size, err := downloader.DirSize(name)
 	if err != nil {
-		logError(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		internalError(w, err)
 		return
 	}
 	res := CollectionLookupResponse{
@@ -136,8 +134,7 @@ func postRecentDownload(w http.ResponseWriter, r *http.Request) {
 
 	response, err := json.Marshal(&info)
 	if err != nil {
-		logError(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		internalError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -165,16 +162,11 @@ func postDownload(w http.ResponseWriter, r *http.Request) {
 	// return information about job
 	response, err := json.Marshal(&job)
 	if err != nil {
-		logError(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		internalError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write(response)
-}
-
-func badRequest(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusBadRequest)
 }
 
 func internalError(w http.ResponseWriter, err error) {
