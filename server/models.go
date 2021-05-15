@@ -12,6 +12,11 @@ type StatusResponse struct {
 	LibrarySize        int64   `json:"size"`
 }
 
+type LogLookupResponse struct {
+	Found bool     `json:"found"`
+	Log   []string `json:"log"`
+}
+
 type CollectionLookupResponse struct {
 	NumOfEpisodes      int      `json:"numOfEpisodes"`
 	DownloadedEpisodes []string `json:"downloadedEpisodes"`

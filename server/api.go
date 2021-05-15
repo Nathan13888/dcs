@@ -1,9 +1,11 @@
 package server
 
 import (
+	"bufio"
 	"encoding/json"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -39,6 +41,49 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		DownloadedDramas:   dd,
 		DownloadedEpisodes: de,
 		LibrarySize:        csize,
+	}
+	json.NewEncoder(w).Encode(res)
+}
+
+func getLog(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	t, found := vars["type"]
+	if !found || !(t == "job" || t == "server") {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	id, found := vars["id"]
+	if !found && t != "server" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var p string
+	if t == "server" {
+		p = logFile.Name()
+	} else { // job
+		p = path.Join(logDir, getJobLogName(id))
+	}
+
+	res := LogLookupResponse{
+		Found: true,
+		Log:   []string{},
+	}
+
+	f, err := os.Open(p)
+	if err != nil {
+		internalError(w, err)
+		res.Found = false
+	} else {
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			res.Log = append(res.Log, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			internalError(w, err)
+			res.Found = false
+		}
 	}
 	json.NewEncoder(w).Encode(res)
 }
@@ -126,4 +171,13 @@ func postDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Write(response)
+}
+
+func badRequest(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusBadRequest)
+}
+
+func internalError(w http.ResponseWriter, err error) {
+	logError(err)
+	w.WriteHeader(http.StatusInternalServerError)
 }

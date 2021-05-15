@@ -15,6 +15,7 @@ import (
 
 var timeFormat = time.RFC3339
 var logDir string = path.Join(config.GetConfigHome(), "logs")
+var logFile *os.File
 
 func configureLogger() func() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
@@ -30,7 +31,7 @@ func configureLogger() func() {
 	}
 
 	logName := fmt.Sprintf("server-%s.log", getTime())
-	logFile := getLogFile(logName)
+	logFile = getLogFile(logName)
 
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 	multi := zerolog.MultiLevelWriter(consoleWriter, logFile)
@@ -60,13 +61,17 @@ func loggingMiddleware(next http.Handler) http.Handler {
 
 func getJobLogger(job *DownloadJob) zerolog.Logger {
 	log.Info().Msgf("Created logger for JOB %s", job.ID)
-	jobLogFile := getLogFile(fmt.Sprintf("job-%s.log", job.ID))
+	jobLogFile := getLogFile(getJobLogName(job.ID))
 	// consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 	// multi := zerolog.MultiLevelWriter(consoleWriter, jobLogFile)
 	jobLogger := zerolog.New(jobLogFile).With().Timestamp().
 		Str("job_id", job.ID).
 		Logger()
 	return jobLogger
+}
+
+func getJobLogName(id string) string {
+	return fmt.Sprintf("job-%s.log", id)
 }
 
 func getLogFile(name string) *os.File {
