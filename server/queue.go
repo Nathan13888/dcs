@@ -3,6 +3,7 @@ package server
 import (
 	"dcs/downloader"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -15,6 +16,7 @@ func AddJob(job *DownloadJob) {
 	job.Req.Props.Interactive = false
 	jobs[job.ID] = job
 	job.Status = QueuedJob
+	job.Date = time.Now()
 }
 
 func StartJob(id string) {
