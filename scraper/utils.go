@@ -83,6 +83,25 @@ func GetRange(r string) []float64 {
 	return res
 }
 
+func EscapeName(name string) string {
+	var sb strings.Builder
+	runes := []rune{' ', '(', ')', '[', ']', '.'}
+	for _, c := range name {
+		// search `runes`
+		found := false
+		for _, r := range runes {
+			if c == r {
+				found = true
+				break
+			}
+		}
+		if found || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') {
+			sb.WriteRune(c)
+		}
+	}
+	return sb.String()
+}
+
 // JoinURL combines several parts of URLs together into a string
 func JoinURL(a string, b string) string {
 	u, _ := url.Parse(a)

@@ -39,7 +39,7 @@ func Search(qry string) []DramaInfo {
 			FullURL: fullURL,
 			SubURL:  subURL,
 			Domain:  URL,
-			Name:    name,
+			Name:    EscapeName(name),
 		}
 		res = append(res, obj)
 	})

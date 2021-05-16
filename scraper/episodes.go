@@ -29,7 +29,7 @@ func GetEpisodesByLink(link string) []EpisodeInfo {
 	c.Visit(link)
 	return GetEpisodes(DramaInfo{
 		FullURL: link,
-		Name:    name,
+		Name:    EscapeName(name),
 	})
 }
 
