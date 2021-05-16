@@ -51,6 +51,18 @@ var downloadCmd = &cobra.Command{
 				panic(fmt.Errorf("remote server NOT online"))
 			}
 		}
+		showRecent, err := cmd.Flags().GetBool("no-recent")
+		if err != nil {
+			panic(err)
+		}
+		bulkMode, err := cmd.Flags().GetBool("bulk")
+		if err != nil {
+			panic(err)
+		}
+		tryout, err := cmd.Flags().GetBool("tryout")
+		if err != nil {
+			panic(err)
+		}
 
 		prop := downloader.DownloadProperties{
 			Overwrite:   overwrite,
@@ -64,14 +76,11 @@ var downloadCmd = &cobra.Command{
 		} else {
 			var link string
 			var episodeRange []float64
+		StartSearch:
 			if len(args) == 0 {
 				var res string
 				var err error
 				var drama scraper.DramaInfo
-				showRecent, err := cmd.Flags().GetBool("no-recent")
-				if err != nil {
-					panic(err)
-				}
 				if !showRecent {
 					drama = *searchRecent(remote)
 				} else {
@@ -133,16 +142,20 @@ var downloadCmd = &cobra.Command{
 				episodes := scraper.GetEpisodes(drama)
 				DisplayEpisodesInfo(episodes)
 
-				res, err = prompt.String("Episode Range")
-				if err != nil {
-					panic(err)
+				if tryout {
+					episodeRange = []float64{1.0}
+				} else {
+					res, err = prompt.String("Episode Range")
+					if err != nil {
+						panic(err)
+					}
+					episodeRange = scraper.GetRange(strings.TrimSpace(res))
 				}
-				episodeRange = scraper.GetRange(strings.TrimSpace(res))
 			} else {
 				link = scraper.FirstSearch(scraper.JoinArgs(args[:len(args)-1]))
 				episodeRange = scraper.GetRange(args[len(args)-1])
 			}
-			if link != "" {
+			if len(link) > 0 {
 				// TODO: sanitize value of episode
 				episodes := scraper.GetEpisodesByLink(link)
 				fmt.Printf("Attemping to download these episodes: %v\n\n", episodeRange)
@@ -169,7 +182,9 @@ var downloadCmd = &cobra.Command{
 				}
 			} else {
 				fmt.Println("There has been a problem using your specified query")
-				return
+			}
+			if bulkMode {
+				goto StartSearch
 			}
 		}
 	},
@@ -343,6 +358,8 @@ func init() {
 	downloadCmd.Flags().BoolP("overwrite", "o", false, "Overwrite if episode exists")
 	downloadCmd.Flags().BoolP("no-interactive", "i", false, "Prompt to overwrite episode; important for automated download")
 	downloadCmd.Flags().BoolP("dont-ignore-m3u8", "m", false, "Download M3U8 files")
+	downloadCmd.Flags().BoolP("bulk", "b", false, "bulk mode")
+	downloadCmd.Flags().BoolP("tryout", "t", false, "tryout a drama (just assume ep 1)")
 
 	// Here you will define your flags and configuration settings.
 
