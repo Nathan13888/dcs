@@ -13,7 +13,8 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 )
 
-var timeFormat = time.RFC3339
+const timeFormat = time.RFC3339
+
 var logDir string = path.Join(config.GetConfigHome(), "logs")
 var logFile *os.File
 

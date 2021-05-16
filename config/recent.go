@@ -12,8 +12,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+const timeFormat = "Jan-02-06_15:04:05"
+
 var recentsConfigPath string
-var timeFormat = "Jan-02-06_15:04:05"
 
 var recentsConfig = viper.New()
 var recentDownloads map[string][]string = make(map[string][]string)
