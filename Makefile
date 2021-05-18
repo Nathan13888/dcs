@@ -1,9 +1,7 @@
 .DEFAULT_GOAL := build-n-install
 
 update:
-	make build
-	pkill dcs
-	make install
+	./update.sh
 
 build-n-install:
 	make build
@@ -12,6 +10,9 @@ build-n-install:
 build:
 	# *** BUILDING DCS ***
 	go build -o bin/dcs -ldflags "-X 'dcs/config.BuildUser=$$(id -u -n)' -X 'dcs/config.BuildTime=$$(date)' -s -w"
+
+docker-build:
+	docker build -t dcs .
 
 install:
 	# *** INSTALLING DCS ***
