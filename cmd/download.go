@@ -83,6 +83,8 @@ var downloadCmd = &cobra.Command{
 				var drama scraper.DramaInfo
 				if !showRecent {
 					drama = *searchRecent(remote)
+					// } else if enterLink {
+					// drama=scraper.
 				} else {
 					drama = *searchDrama()
 				}
@@ -298,7 +300,7 @@ func download(link string, prop downloader.DownloadProperties) {
 		// TODO: prompt confirm download
 		dinfo := downloader.DownloadInfo{
 			Link: link,
-			Name: ajax.Name,
+			Name: scraper.EscapeName(ajax.Name),
 			Num:  ajax.Num,
 		}
 		if remote {
