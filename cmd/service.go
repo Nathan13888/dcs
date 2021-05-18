@@ -11,11 +11,11 @@ import (
 
 // serviceCmd represents the service command
 var serviceCmd = &cobra.Command{
-	Use:   "service",
-	Short: "Control the DCS daemon",
-	Long:  `A daemon to periodically download new episodes of a drama.`,
+	Use:     "service",
+	Short:   "Control the DCS daemon",
+	Long:    `A daemon to periodically download new episodes of a drama.`,
+	Aliases: []string{"s", "serv"},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("service called")
 	},
 }
 
