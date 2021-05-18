@@ -99,7 +99,7 @@ func EscapeName(name string) string {
 			sb.WriteRune(c)
 		}
 	}
-	return sb.String()
+	return strings.TrimSpace(sb.String())
 }
 
 // JoinURL combines several parts of URLs together into a string
