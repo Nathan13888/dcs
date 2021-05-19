@@ -36,13 +36,17 @@ func Configure() {
 	viper.AddConfigPath(GetConfigHome())
 	viper.AddConfigPath("/etc/dcs/")
 	viper.AddConfigPath(".")
-	viper.AddConfigPath(".")
 	SetDefaults()
 
-	// err = viper.ReadInConfig()
-	// if err != nil {
-	// panic(err)
-	// }
+	if err := viper.ReadInConfig(); err == nil {
+		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	} else if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		fmt.Println("CONFIG FILE NOT FOUND, CREATING DEFAULT CONFIG")
+		os.MkdirAll(GetConfigHome(), 0755)
+		viper.SafeWriteConfigAs(path.Join(GetConfigHome(), "config.json"))
+	} else {
+		panic(err)
+	}
 }
 
 func SetDefaults() {
