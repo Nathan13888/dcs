@@ -41,22 +41,30 @@ var listCmd = &cobra.Command{
 		}
 
 		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"ID", "Collection", "Episode", "Status", "Date", "Size"})
+		table.SetHeader([]string{"ID", "Collection", "Episode", "Status", "Progress", "Date", "Size"})
 		var sum int64
+		var totalProgress float64
 		for i, job := range jobs.Jobs {
 			size := jobs.Sizes[i]
 			sum += size
+			totalProgress += job.Progress
 			row := []string{
 				job.ID,
 				job.Req.DInfo.Name,
 				fmt.Sprintf("%v", job.Req.DInfo.Num),
 				string(job.Status),
+				fmt.Sprintf("%.2f %%", job.Progress),
 				job.Date.Format(time.RFC822),
 				fmt.Sprintf("%.2f GB", float64(size)/math.Pow(1024, 3)),
 			}
 			table.Append(row)
 		}
-		table.SetFooter([]string{"", "", "", "", "Total Size", fmt.Sprintf("%.1f GB", float64(sum)/math.Pow(1024, 3))})
+		table.SetFooter([]string{"", "", "",
+			"Total Progress", fmt.Sprintf("%.1f %%",
+				totalProgress/float64(len(jobs.Jobs))),
+			"Total Size", fmt.Sprintf("%.1f GB",
+				float64(sum)/math.Pow(1024, 3)),
+		})
 
 		table.SetBorder(false)
 		table.SetAutoWrapText(true)
