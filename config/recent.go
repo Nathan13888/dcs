@@ -63,7 +63,7 @@ func AddRecentDownload(info *scraper.DramaInfo) {
 // }
 
 type RecentEntry struct {
-	key  string
+	ref  *[]string
 	time int
 }
 type REList []RecentEntry
@@ -81,35 +81,40 @@ func (e REList) Swap(i, j int) {
 }
 
 func GetRecentDownloads() []scraper.DramaInfo {
-	var dramas []scraper.DramaInfo
-	var sorted []RecentEntry
-	for key, props := range recentDownloads {
+	L := len(recentDownloads)
+	dramas := make([]scraper.DramaInfo, L)
+	sorted := make([]RecentEntry, L)
+	i := 0
+	for _, props := range recentDownloads {
 		res, err := time.Parse(timeFormat, props[0])
+		copy := props
 		if err != nil {
 			panic(err)
 		}
-		sorted = append(sorted, RecentEntry{
-			key:  key,
+		sorted[i] = RecentEntry{
+			ref:  &copy,
 			time: int(time.Since(res).Seconds()),
-		})
+		}
+		i++
 	}
 
 	sort.Sort(REList(sorted))
+	j := 0
 	for _, ent := range sorted {
-		key := ent.key
-		props := recentDownloads[key]
+		props := *ent.ref
 		if !(len(props) >= 2) {
-			panic(fmt.Errorf("invalid properties for key `%s`: %s", key, props))
+			panic(fmt.Errorf("invalid properties for recent downloads entry"))
 		}
 		name := props[1]
 		subURL := props[2]
 
-		dramas = append(dramas, scraper.DramaInfo{
+		dramas[j] = scraper.DramaInfo{
 			FullURL: scraper.URL + subURL,
 			SubURL:  subURL,
 			Domain:  scraper.URL,
 			Name:    name,
-		})
+		}
+		j++
 	}
 
 	return dramas
