@@ -95,7 +95,7 @@ func EscapeName(name string) string {
 				break
 			}
 		}
-		if found || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') {
+		if found || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') {
 			sb.WriteRune(c)
 		}
 	}
