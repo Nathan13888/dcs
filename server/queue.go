@@ -2,6 +2,7 @@ package server
 
 import (
 	"dcs/downloader"
+	"math"
 	"os"
 	"time"
 
@@ -29,6 +30,9 @@ func StartJob(id string) {
 	job.Status = RunningJob
 	go func() {
 		info := job.Req.DInfo
+		info.ProgressUpdater = func(f float64) {
+			job.Progress = math.Round(f*100) / 100
+		}
 		jobLogger := getJobLogger(job)
 		info.Logger = jobLogger
 

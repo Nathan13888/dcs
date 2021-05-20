@@ -122,8 +122,12 @@ Loop:
 		select {
 		case <-t.C:
 			bar.SetCurrent(res.BytesComplete())
+			if info.ProgressUpdater != nil {
+				info.ProgressUpdater(float64(res.BytesComplete()) / float64(res.Size))
+			}
 
 		case <-res.Done:
+			info.ProgressUpdater(1.00) // 100% done
 			break Loop
 		}
 	}

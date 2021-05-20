@@ -43,10 +43,11 @@ const (
 )
 
 type DownloadJob struct {
-	ID     string          `json:"id"`
-	Date   time.Time       `json:"date"`
-	Status DownloadStatus  `json:"status"`
-	Req    DownloadRequest `json:"req"`
+	ID       string          `json:"id"`
+	Date     time.Time       `json:"date"`
+	Status   DownloadStatus  `json:"status"`
+	Progress float64         `json:"progress"`
+	Req      DownloadRequest `json:"req"`
 }
 
 type JobsResponse struct {

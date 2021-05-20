@@ -153,9 +153,10 @@ func postDownload(w http.ResponseWriter, r *http.Request) {
 
 	// create new job
 	job := DownloadJob{
-		ID:     strings.ReplaceAll(uuid.New().String(), "-", ""),
-		Status: QueuedJob,
-		Req:    dreq,
+		ID:       strings.ReplaceAll(uuid.New().String(), "-", ""),
+		Status:   QueuedJob,
+		Progress: 0.0,
+		Req:      dreq,
 	}
 	log.Info().
 		Str("job", job.ID).
