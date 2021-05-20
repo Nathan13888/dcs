@@ -23,7 +23,7 @@ type LogLookupResponse struct {
 type CollectionLookupResponse struct {
 	NumOfEpisodes      int      `json:"numOfEpisodes"`
 	DownloadedEpisodes []string `json:"downloadedEpisodes"`
-	Error              error    `json:"error"`
+	Error              error    `json:"err,omitempty"`
 	Size               int64    `json:"size"`
 }
 
