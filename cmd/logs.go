@@ -29,7 +29,7 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			panic(err)
 		}
-		var rp string = "log"
+		var rp string = "api/log"
 		if len(job) > 0 { // display logs about job (if it exists)
 			rp += "/job/" + job
 		} else {
