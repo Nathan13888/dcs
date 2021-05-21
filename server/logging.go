@@ -50,12 +50,16 @@ func logError(err error) {
 func loggingMiddleware(next http.Handler) http.Handler {
 	processedRequests++
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Info().
-			Str("method", r.Method).
-			Str("path", r.URL.Path).
-			Str("remote_address", r.RemoteAddr).
-			Str("user_agent", r.UserAgent()).
-			Msg("Access")
+		start := time.Now()
+		defer func() {
+			log.Info().
+				Str("method", r.Method).
+				Dur("resp_time", time.Since(start)).
+				Str("path", r.URL.Path).
+				Str("remote_address", r.RemoteAddr).
+				Str("user_agent", r.UserAgent()).
+				Msg("Access")
+		}()
 		next.ServeHTTP(w, r)
 	})
 }
