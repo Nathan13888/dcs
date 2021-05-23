@@ -23,6 +23,13 @@ func Start(debug bool) {
 	if debug {
 		DEBUGMODE = true
 	}
+	// configure logger
+	closeLogger := configureLogger()
+	defer closeLogger()
+
+	if DEBUGMODE {
+		log.Info().Msg("DEBUGMODE is enabled")
+	}
 
 	_, port := config.DaemonURL()
 
@@ -48,13 +55,16 @@ func Start(debug bool) {
 	r.PathPrefix("/content/").Handler(http.StripPrefix("/content/", http.FileServer(http.Dir(config.DownloadPath()))))
 
 	r.Use(loggingMiddleware)
-	closeLogger := configureLogger()
-	defer closeLogger()
 
 	config.IS_SERVER = true
 	StartTime = time.Now()
 
-	log.Info().Msgf("Starting DCS Daemon at port %d", port)
+	log.Info().
+		Int("port", port).
+		Str("version", config.BuildVersion).
+		Str("builder", config.BuildUser).
+		Str("build_time", config.BuildTime).
+		Msg("Starting DCS Daemon Service")
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
