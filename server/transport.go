@@ -37,16 +37,22 @@ type DownloadStatus string
 const (
 	QueuedJob   DownloadStatus = "queued"
 	RunningJob  DownloadStatus = "running"
-	StaledJob   DownloadStatus = "staled"
 	FailedJob   DownloadStatus = "failed"
 	CompleteJob DownloadStatus = "complete"
 )
 
+type ProgressInfo struct {
+	Completion float64        `json:"completion"`
+	StartTime  time.Time      `json:"startTime"`
+	EndTime    time.Time      `json:"endTime"`
+	Status     DownloadStatus `json:"status"`
+}
+
 type DownloadJob struct {
 	ID       string          `json:"id"`
 	Date     time.Time       `json:"date"`
-	Status   DownloadStatus  `json:"status"`
-	Progress float64         `json:"progress"`
+	Schedule time.Time       `json:"scheduledTime"`
+	Progress ProgressInfo    `json:"progress"`
 	Req      DownloadRequest `json:"req"`
 }
 

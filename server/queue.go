@@ -2,6 +2,7 @@ package server
 
 import (
 	"dcs/downloader"
+	"fmt"
 	"math"
 	"os"
 	"time"
@@ -14,34 +15,44 @@ var jobs = make(map[string]*DownloadJob)
 func AddJob(job *DownloadJob) {
 	log.Printf("Recording new job with ID %s\n", job.ID)
 
+	// configure job
 	job.Req.Props.Interactive = false
-	jobs[job.ID] = job
-	job.Status = QueuedJob
+	job.Progress.Status = QueuedJob
+	job.Progress.Completion = 0.0
 	job.Date = time.Now()
+	// add to queue
+	jobs[job.ID] = job
+
+	fmt.Println(job.Schedule)
+	if job.Schedule.Before(time.Now()) {
+		RunJob(job.ID)
+	}
 }
 
-func StartJob(id string) {
+func RunJob(id string) {
 	if !JobExists(id) {
 		log.Printf("WARN: Job with ID %s cannot be found", id)
 		return
 	}
 	log.Printf("Starting job with ID %s\n", id)
 	job := jobs[id]
-	job.Status = RunningJob
+	job.Progress.Status = RunningJob
+	job.Progress.StartTime = time.Now()
 	go func() {
 		info := job.Req.DInfo
 		info.ProgressUpdater = func(f float64) {
-			job.Progress = math.Round(f*100) / 100
+			job.Progress.Completion = math.Round(f*100) / 100
 		}
 		jobLogger := getJobLogger(job)
 		info.Logger = jobLogger
 
 		err := downloader.Get(info, job.Req.Props)
 		if err != nil {
-			job.Status = FailedJob
+			job.Progress.Status = FailedJob
 			jobLogger.Error().Err(err).Msg("")
 		}
-		job.Status = CompleteJob
+		job.Progress.Status = CompleteJob
+		job.Progress.EndTime = time.Now()
 	}()
 }
 

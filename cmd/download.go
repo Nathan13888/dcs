@@ -338,7 +338,7 @@ func download(link string, prop downloader.DownloadProperties) {
 			}
 
 			fmt.Printf("Job ID:     %s\n", job.ID)
-			fmt.Printf("Job Status: %s\n\n", job.Status)
+			fmt.Printf("Job Status: %s\n\n", job.Progress.Status)
 			fmt.Printf("Job downloads %s EPISODE %v\n", job.Req.DInfo.Name, job.Req.DInfo.Num)
 		} else {
 			fmt.Println("Downloading...")
