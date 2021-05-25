@@ -2,7 +2,6 @@ package server
 
 import (
 	"dcs/downloader"
-	"fmt"
 	"math"
 	"os"
 	"time"
@@ -23,7 +22,9 @@ func AddJob(job *DownloadJob) {
 	// add to queue
 	jobs[job.ID] = job
 
-	fmt.Println(job.Schedule)
+	if job.Schedule.IsZero() {
+		job.Schedule = time.Now().Truncate(time.Minute)
+	}
 	if job.Schedule.Before(time.Now()) {
 		RunJob(job.ID)
 	}
