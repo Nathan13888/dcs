@@ -58,9 +58,9 @@ var listCmd = &cobra.Command{
 				} else {
 					t = job.Progress.EndTime
 				}
-				dur := job.Progress.EndTime.Sub(t)
+				dur := t.Sub(job.Progress.StartTime)
 				totalDur += dur
-				dt = fmt.Sprintf("%s%dms", dur.String(), dur.Milliseconds())
+				dt = dur.Round(time.Second).String()
 			}
 
 			row := []string{
@@ -79,7 +79,7 @@ var listCmd = &cobra.Command{
 		table.SetFooter([]string{"", "", "",
 			"Total Progress", fmt.Sprintf("%.1f %%",
 				totalProgress/float64(len(jobs.Jobs))),
-			"Total DT", totalDur.String(),
+			"Total DT", totalDur.Round(time.Millisecond).String(),
 			"Total Size", fmt.Sprintf("%.1f GB",
 				float64(sum)/math.Pow(1024, 3)),
 		})
