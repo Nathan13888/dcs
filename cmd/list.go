@@ -41,19 +41,36 @@ var listCmd = &cobra.Command{
 		}
 
 		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"ID", "Collection", "Episode", "Status", "Progress", "Date", "Size"})
+		table.SetHeader([]string{"ID", "Collection", "Episode", "Status", "Progress", "Scheduled", "Download Time", "Date", "Size"})
 		var sum int64
 		var totalProgress float64
+		var totalDur time.Duration
 		for i, job := range jobs.Jobs {
 			size := jobs.Sizes[i]
 			sum += size
-			totalProgress += job.Progress
+			totalProgress += job.Progress.Completion
+
+			dt := "unknown"
+			if !job.Progress.StartTime.IsZero() {
+				var t time.Time
+				if job.Progress.EndTime.IsZero() {
+					t = time.Now()
+				} else {
+					t = job.Progress.EndTime
+				}
+				dur := job.Progress.EndTime.Sub(t)
+				totalDur += dur
+				dt = fmt.Sprintf("%s%dms", dur.String(), dur.Milliseconds())
+			}
+
 			row := []string{
 				job.ID,
 				job.Req.DInfo.Name,
 				fmt.Sprintf("%v", job.Req.DInfo.Num),
-				string(job.Status),
-				fmt.Sprintf("%.2f %%", job.Progress),
+				string(job.Progress.Status),
+				fmt.Sprintf("%.2f %%", job.Progress.Completion),
+				job.Schedule.Format(time.RFC822),
+				dt,
 				job.Date.Format(time.RFC822),
 				fmt.Sprintf("%.2f GB", float64(size)/math.Pow(1024, 3)),
 			}
@@ -62,6 +79,7 @@ var listCmd = &cobra.Command{
 		table.SetFooter([]string{"", "", "",
 			"Total Progress", fmt.Sprintf("%.1f %%",
 				totalProgress/float64(len(jobs.Jobs))),
+			"Total DT", totalDur.String(),
 			"Total Size", fmt.Sprintf("%.1f GB",
 				float64(sum)/math.Pow(1024, 3)),
 		})
