@@ -1,7 +1,9 @@
 package server
 
 import (
+	"dcs/config"
 	"dcs/downloader"
+	"fmt"
 	"math"
 	"os"
 	"time"
@@ -10,6 +12,7 @@ import (
 )
 
 var jobs = make(map[string]*DownloadJob)
+var runningJobs = 0
 
 func AddJob(job *DownloadJob) {
 	log.Printf("Recording new job with ID %s\n", job.ID)
@@ -25,20 +28,43 @@ func AddJob(job *DownloadJob) {
 	if job.Schedule.IsZero() {
 		job.Schedule = time.Now().Truncate(time.Minute)
 	}
-	if job.Schedule.Before(time.Now()) {
-		RunJob(job.ID)
+
+	CheckJob(job)
+}
+
+func CheckJob(job *DownloadJob) {
+	if !job.Schedule.IsZero() && job.Schedule.After(time.Now()) {
+		return
+	}
+	if runningJobs > config.DownloadLimit() {
+		return
+	}
+	if job.Progress.Status != QueuedJob {
+		return
+	}
+	RunJob(job.ID)
+}
+
+func CheckQueue() {
+	for _, j := range jobs {
+		CheckJob(j)
 	}
 }
 
 func RunJob(id string) {
 	if !JobExists(id) {
-		log.Printf("WARN: Job with ID %s cannot be found", id)
+		logError(fmt.Errorf("job with ID %s cannot be found", id))
 		return
 	}
-	log.Printf("Starting job with ID %s\n", id)
+	runningJobs++
 	job := jobs[id]
 	job.Progress.Status = RunningJob
 	job.Progress.StartTime = time.Now()
+	log.Info().
+		Str("job", job.ID).
+		Str("collection", job.Req.DInfo.Name).
+		Float64("num", job.Req.DInfo.Num).
+		Msg("Job starting")
 	go func() {
 		info := job.Req.DInfo
 		info.ProgressUpdater = func(f float64) {
@@ -51,9 +77,24 @@ func RunJob(id string) {
 		if err != nil {
 			job.Progress.Status = FailedJob
 			jobLogger.Error().Err(err).Msg("")
+			log.Error().
+				Err(err).
+				Str("job", job.ID).
+				Str("collection", job.Req.DInfo.Name).
+				Float64("num", job.Req.DInfo.Num).
+				Msg("Job experienced an error")
+		} else {
+			job.Progress.Status = CompleteJob
 		}
-		job.Progress.Status = CompleteJob
 		job.Progress.EndTime = time.Now()
+
+		log.Info().
+			Str("job", job.ID).
+			Str("collection", job.Req.DInfo.Name).
+			Float64("num", job.Req.DInfo.Num).
+			Msg("Job completed")
+		runningJobs--
+		CheckQueue()
 	}()
 }
 

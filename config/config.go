@@ -53,6 +53,7 @@ func SetDefaults() {
 	viper.SetDefault("DownloadPath", path.Join(GetHome(), "Downloads", "DCS"))
 	viper.SetDefault("DaemonHost", "localhost")
 	viper.SetDefault("DaemonPort", 6969)
+	viper.SetDefault("DownloadLimit", 2)
 	viper.SetDefault("SQLiteFile", path.Join(GetConfigHome()))
 }
 
@@ -62,4 +63,8 @@ func DownloadPath() string {
 
 func DaemonURL() (string, int) {
 	return viper.GetString("DaemonHost"), viper.GetInt("DaemonPort")
+}
+
+func DownloadLimit() int {
+	return viper.GetInt("DownloadLimit")
 }
