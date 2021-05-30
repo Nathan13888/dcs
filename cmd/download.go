@@ -51,7 +51,7 @@ var downloadCmd = &cobra.Command{
 				panic(fmt.Errorf("remote server NOT online"))
 			}
 		}
-		showRecent, err := cmd.Flags().GetBool("no-recent")
+		noRecent, err := cmd.Flags().GetBool("no-recent")
 		if err != nil {
 			panic(err)
 		}
@@ -81,7 +81,7 @@ var downloadCmd = &cobra.Command{
 				var res string
 				var err error
 				var drama scraper.DramaInfo
-				if !showRecent {
+				if !noRecent && !tryout {
 					drama = *searchRecent(remote)
 					// } else if enterLink {
 					// drama=scraper.
@@ -185,7 +185,7 @@ var downloadCmd = &cobra.Command{
 			} else {
 				fmt.Println("There has been a problem using your specified query")
 			}
-			if bulkMode {
+			if bulkMode || tryout {
 				goto StartSearch
 			}
 		}
@@ -273,8 +273,8 @@ func searchDrama() *scraper.DramaInfo {
 	}
 	queries := scraper.Search(res)
 	if len(queries) == 0 {
-		// TODO: don't PANIC
-		panic("no queries were found")
+		fmt.Printf("Found no results found with '%s'.\n", res)
+		return searchDrama()
 	} else {
 		resInfo, err := prompt.Drama(queries)
 		if err != nil {
