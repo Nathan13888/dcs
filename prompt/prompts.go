@@ -85,9 +85,12 @@ func DirSelect(label string, files []os.FileInfo, foldersOnly bool) (os.FileInfo
 		Items: names,
 	}
 	_, res, err := p.Run()
-	if err != nil {
+	if err == promptui.ErrInterrupt {
+		os.Exit(0)
+	} else if err != nil {
 		panic(err)
 	}
+
 	file, exists := displayed[res]
 	if !exists {
 		panic(errors.New("'" + res + "' could not be found"))
@@ -102,10 +105,12 @@ func Confirm(label string) bool {
 		IsConfirm: true,
 		Default:   "N",
 	}
-	res, _ := p.Run()
-	// if err != nil {
-	// 	panic(err)
-	// }
+	res, err := p.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(0)
+	} else if err != nil {
+		panic(err)
+	}
 
 	if strings.EqualFold(res, "Y") {
 		return true
@@ -126,9 +131,6 @@ func String(label string) (string, error) {
 		},
 	}
 	res, err := p.Run()
-	if err != nil {
-		panic(err)
-	}
 	return res, err
 }
 
@@ -146,28 +148,5 @@ func PositiveInteger(label string) (string, error) {
 		},
 	}
 	res, err := p.Run()
-	if err != nil {
-		panic(err)
-	}
 	return res, err
 }
-
-// LimitedPositiveInteger - Prompt for a positive integer with an upper bound
-// func LimitedPositiveInteger(label string, upper int) (string, error) {
-// 	p := promptui.Prompt{
-// 		Label: label,
-// 		Validate: func(input string) error {
-// 			trimmed := strings.TrimSpace(input)
-// 			isNum, num := scraper.CheckNumber(trimmed)
-// 			if !isNum || num > upper {
-// 				return errors.New(trimmed + " is not valid")
-// 			}
-// 			return nil
-// 		},
-// 	}
-// 	res, err := p.Run()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return res, err
-// }

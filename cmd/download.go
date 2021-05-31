@@ -11,8 +11,10 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"os"
 	"strings"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
@@ -148,7 +150,9 @@ var downloadCmd = &cobra.Command{
 					episodeRange = []float64{1.0}
 				} else {
 					res, err = prompt.String("Episode Range")
-					if err != nil {
+					if err == promptui.ErrInterrupt {
+						os.Exit(0)
+					} else if err != nil {
 						panic(err)
 					}
 					episodeRange = scraper.GetRange(strings.TrimSpace(res))
@@ -252,12 +256,12 @@ func searchRecent(remote bool) *scraper.DramaInfo {
 	}
 
 	res, err := prompt.Drama(append([]scraper.DramaInfo{searchItem}, recent...))
-	if err != nil {
+	if err == promptui.ErrInterrupt {
+		os.Exit(0)
+	} else if err != nil {
 		panic(err)
 	}
 
-	// fmt.Println(res)
-	// fmt.Println(searchItem)
 	if *res == searchItem {
 		fmt.Println("Searching for drama instead.")
 		return searchDrama()
@@ -268,7 +272,9 @@ func searchRecent(remote bool) *scraper.DramaInfo {
 func searchDrama() *scraper.DramaInfo {
 	var drama *scraper.DramaInfo
 	res, err := prompt.String("Search")
-	if err != nil {
+	if err == promptui.ErrInterrupt {
+		os.Exit(0)
+	} else if err != nil {
 		panic(err)
 	}
 	queries := scraper.Search(res)
@@ -277,7 +283,9 @@ func searchDrama() *scraper.DramaInfo {
 		return searchDrama()
 	} else {
 		resInfo, err := prompt.Drama(queries)
-		if err != nil {
+		if err == promptui.ErrInterrupt {
+			os.Exit(0)
+		} else if err != nil {
 			panic(err)
 		}
 		drama = resInfo
