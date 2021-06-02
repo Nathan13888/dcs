@@ -101,9 +101,12 @@ func DirSelect(label string, files []os.FileInfo, foldersOnly bool) (os.FileInfo
 // Confirm - Prompt for comfirmation
 func Confirm(label string) bool {
 	p := promptui.Prompt{
-		Label:     label,
-		IsConfirm: true,
-		Default:   "N",
+		Label: label + " (y/N)",
+		Validate: func(input string) error {
+			// if len(input) > 0 {
+			// }
+			return nil
+		},
 	}
 	res, err := p.Run()
 	if err == promptui.ErrInterrupt {
