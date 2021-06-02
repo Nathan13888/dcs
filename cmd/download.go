@@ -75,13 +75,17 @@ var downloadCmd = &cobra.Command{
 
 		if len(args) == 1 && scraper.IsLink(args[0]) {
 			download(args[0], prop)
-		} else {
-			var link string
-			var episodeRange []float64
-		StartSearch:
-			if len(args) == 0 {
-				var res string
-				var err error
+		} else if len(args) >= 2 { // for first search and episode range
+			link := scraper.FirstSearch(scraper.JoinArgs(args[:len(args)-1]))
+			er := scraper.GetRange(args[len(args)-1]) // select last arg as range
+			downloadRange(scraper.GetEpisodesByLink(link), er, prop)
+		} else { // interactive prompted download(s)
+			type Target struct {
+				eps []scraper.EpisodeInfo
+				er  []float64
+			}
+			var targets []Target
+			for {
 				var drama scraper.DramaInfo
 				if !noRecent && !tryout {
 					drama = *searchRecent(remote)
@@ -90,49 +94,9 @@ var downloadCmd = &cobra.Command{
 				} else {
 					drama = *searchDrama()
 				}
-				link = drama.FullURL
-
 				updateRecent(&drama, remote)
 
-				var cnt int
-				var epInfo []string
-				var csize int64
-
-				if remote {
-					var obj server.CollectionLookupResponse
-					res, err := Request("GET", "api/lookup/collection/"+drama.Name)
-					if err != nil {
-						panic(err)
-					}
-					defer res.Body.Close()
-
-					code := res.StatusCode
-					if code != http.StatusOK {
-						cnt = 0
-						goto DisplayFoundEpisodes
-					}
-
-					decoder := json.NewDecoder(res.Body)
-					decoder.DisallowUnknownFields()
-					err = decoder.Decode(&obj)
-					if err != nil {
-						panic(err)
-					}
-					cnt = obj.NumOfEpisodes
-					epInfo = obj.DownloadedEpisodes
-					// err = obj.Error
-					csize = obj.Size
-				} else {
-					cnt, epInfo, err = downloader.CollectionLookup(drama.Name)
-					if err != nil {
-						fmt.Println(err)
-					}
-					csize, err = downloader.DirSize(drama.Name)
-					if err != nil {
-						fmt.Println(err)
-					}
-				}
-			DisplayFoundEpisodes:
+				cnt, epInfo, csize := lookupDownloadedEpisodes(drama, remote)
 				if cnt == 0 {
 					fmt.Print("No episodes found.\n\n")
 				} else {
@@ -146,10 +110,11 @@ var downloadCmd = &cobra.Command{
 				episodes := scraper.GetEpisodes(drama)
 				DisplayEpisodesInfo(episodes)
 
+				var episodeRange []float64
 				if tryout {
 					episodeRange = []float64{1.0}
 				} else {
-					res, err = prompt.String("Episode Range")
+					res, err := prompt.String("Episode Range")
 					if err == promptui.ErrInterrupt {
 						os.Exit(0)
 					} else if err != nil {
@@ -157,43 +122,85 @@ var downloadCmd = &cobra.Command{
 					}
 					episodeRange = scraper.GetRange(strings.TrimSpace(res))
 				}
-			} else {
-				link = scraper.FirstSearch(scraper.JoinArgs(args[:len(args)-1]))
-				episodeRange = scraper.GetRange(args[len(args)-1])
-			}
-			if len(link) > 0 {
-				// TODO: sanitize value of episode
-				episodes := scraper.GetEpisodesByLink(link)
-				fmt.Printf("Attemping to download these episodes: %v\n\n", episodeRange)
-				for _, num := range episodeRange {
-					fmt.Printf("Looking for episode %v...\n", num)
-					var url string
-					for _, e := range episodes {
-						if e.Number == num {
-							url = e.Link
-						}
-					}
-					containsEpisode := false
-					for _, ep := range episodes {
-						if ep.Number == num {
-							containsEpisode = true
-							break
-						}
-					}
-					if containsEpisode || url == "" {
-						download(scraper.URL+url, prop)
-					} else {
-						fmt.Printf("Episode %v was not available", num)
-					}
+				targets = append(targets, Target{
+					eps: episodes,
+					er:  episodeRange,
+				})
+				if !(bulkMode || tryout) { // do not prompt again
+					break
 				}
-			} else {
-				fmt.Println("There has been a problem using your specified query")
+				if prompt.Confirm("Would you like to start downloading?") {
+					break
+				}
 			}
-			if bulkMode || tryout {
-				goto StartSearch
+			for _, tar := range targets {
+				downloadRange(tar.eps, tar.er, prop)
 			}
 		}
 	},
+}
+
+func downloadRange(episodes []scraper.EpisodeInfo, erange []float64, prop downloader.DownloadProperties) {
+	fmt.Printf("Attemping to download these episodes: %v\n\n", erange)
+
+	for _, e := range episodes {
+		url := e.Link
+		for x := 0; x < len(erange); x++ { // erange should be sorted --> better efficiency
+			if e.Number == erange[x] && len(url) > 0 {
+				erange[x] = math.MaxFloat64
+				download(scraper.URL+url, prop)
+				break
+			}
+		}
+	}
+	for _, er := range erange {
+		if er != math.MaxFloat64 {
+			fmt.Printf("Episode %v was not available.\n", er)
+		}
+	}
+}
+
+func lookupDownloadedEpisodes(drama scraper.DramaInfo, remote bool) (int, []string, int64) {
+	var cnt int
+	var epInfo []string
+	var csize int64
+	var err error
+
+	if remote {
+		var obj server.CollectionLookupResponse
+		res, err := Request("GET", "api/lookup/collection/"+drama.Name)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer res.Body.Close()
+
+		code := res.StatusCode
+		if code != http.StatusOK {
+			return 0, []string{}, 0
+		}
+
+		decoder := json.NewDecoder(res.Body)
+		decoder.DisallowUnknownFields()
+		err = decoder.Decode(&obj)
+		if err != nil {
+			fmt.Println(err)
+		}
+		cnt = obj.NumOfEpisodes
+		epInfo = obj.DownloadedEpisodes
+		// err = obj.Error
+		csize = obj.Size
+	} else {
+		cnt, epInfo, err = downloader.CollectionLookup(drama.Name)
+		if err != nil {
+			fmt.Println(err)
+		}
+		csize, err = downloader.DirSize(drama.Name)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return cnt, epInfo, csize
 }
 
 func updateRecent(drama *scraper.DramaInfo, remote bool) {
@@ -294,6 +301,7 @@ func searchDrama() *scraper.DramaInfo {
 	return drama
 }
 
+// TODO: update error handling and prompts
 func download(link string, prop downloader.DownloadProperties) {
 	remote := prop.Remote
 
