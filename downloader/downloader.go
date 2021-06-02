@@ -127,7 +127,9 @@ Loop:
 			}
 
 		case <-res.Done:
-			info.ProgressUpdater(1.00) // 100% done
+			if info.ProgressUpdater != nil {
+				info.ProgressUpdater(1.00) // 100% done
+			}
 			break Loop
 		}
 	}
