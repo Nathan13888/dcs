@@ -10,9 +10,10 @@ import (
 
 // browseCmd represents the browse command
 var browseCmd = &cobra.Command{
-	Use:   "browse",
-	Short: "Browse content on remote.",
-	Long:  "",
+	Use:     "browse",
+	Short:   "Browse content on remote.",
+	Long:    "",
+	Aliases: []string{"b"},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Browsing remote...")
 		u := GetRemoteURL("content/") + "/"

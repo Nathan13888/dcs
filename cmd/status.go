@@ -18,6 +18,7 @@ var statusCmd = &cobra.Command{
 	Long: `Info about the DCS daemon...
 
 	USAGE: service status`,
+	Aliases: []string{"s"},
 	Run: func(cmd *cobra.Command, args []string) {
 		host, port := config.DaemonURL()
 		fmt.Printf("Displaying information about `%s:%d`\n\n", host, port)

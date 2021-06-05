@@ -14,6 +14,7 @@ var pingCmd = &cobra.Command{
 	Long: `Pings Dramacool/Watchasian to see if their website is up.
 
 	USAGE: ping`,
+	Aliases: []string{"p"},
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Pinging %s...\n", scraper.URL)
 		res := scraper.PingDC()

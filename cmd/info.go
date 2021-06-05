@@ -15,6 +15,7 @@ var infoCmd = &cobra.Command{
 
 	USAGE: dcs info <link to drama>
 	USAGE: dcs info <name of drama>`,
+	Aliases: []string{"i"},
 	Run: func(cmd *cobra.Command, args []string) {
 		var link string
 		if scraper.IsLink(args[0]) {

@@ -14,9 +14,10 @@ import (
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List of jobs",
-	Long:  `List download jobs on the remote`,
+	Use:     "list",
+	Short:   "List of jobs",
+	Long:    `List download jobs on the remote`,
+	Aliases: []string{"l"},
 	Run: func(cmd *cobra.Command, args []string) {
 		res, err := Request("GET", "api/jobs")
 		if err != nil {
