@@ -3,7 +3,6 @@ package server
 import (
 	"dcs/config"
 	"errors"
-	"path"
 
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/sqlite"
@@ -26,7 +25,7 @@ func GetDB() *gorm.DB {
 	// 	PreferSimpleProtocol: true,
 	// }), gormConfig)
 	db, err := gorm.Open(
-		sqlite.Open(path.Join(config.GetConfigHome(), "dcs.db")),
+		sqlite.Open(config.DSN()),
 		gormConfig,
 	)
 	if err != nil {

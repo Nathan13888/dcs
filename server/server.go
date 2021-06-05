@@ -65,6 +65,11 @@ func Start(debug bool) {
 		Str("builder", config.BuildUser).
 		Str("build_time", config.BuildTime).
 		Msg("Starting DCS Daemon Service")
+	log.Info().
+		Str("download_path", config.DownloadPath()).
+		Int("download_limit", config.DownloadLimit()).
+		Str("dsn", config.DSN()).
+		Msg("These are the config settings")
 
 	InitDB()
 	RunUncompletedJobs()

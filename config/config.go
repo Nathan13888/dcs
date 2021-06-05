@@ -33,6 +33,7 @@ func Configure() {
 	// Search config in home directory with name ".dcs" (without extension).
 	viper.SetConfigName("config.json")
 	viper.SetConfigType("json")
+	viper.AutomaticEnv()
 	viper.AddConfigPath(GetConfigHome())
 	viper.AddConfigPath("/etc/dcs/")
 	viper.AddConfigPath(".")
@@ -54,7 +55,9 @@ func SetDefaults() {
 	viper.SetDefault("DaemonHost", "localhost")
 	viper.SetDefault("DaemonPort", 6969)
 	viper.SetDefault("DownloadLimit", 2)
-	viper.SetDefault("SQLiteFile", path.Join(GetConfigHome()))
+	viper.SetDefault("DSN", path.Join(GetConfigHome(), "dcs.db"))
+	// viper.SetDefault("DSN",
+	// 	"host=localhost user=dcs password=dcspassword dbname=dcs port=9920 sslmode=disable TimeZone=America/Toronto")
 }
 
 func DownloadPath() string {
@@ -67,4 +70,8 @@ func DaemonURL() (string, int) {
 
 func DownloadLimit() int {
 	return viper.GetInt("DownloadLimit")
+}
+
+func DSN() string {
+	return viper.GetString("DSN")
 }
