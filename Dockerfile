@@ -15,6 +15,7 @@ WORKDIR /app
 # ENV VARIABLES
 #ENV PORT=6969
 #ENV TZ=America/Toronto
+ENV DOWNLOADPATH=/app/downloads
 ENV USER=dcs
 ENV UID=12345
 ENV GID=23456
@@ -33,7 +34,7 @@ RUN adduser \
     --uid "$UID" \
     "$USER"
 
-RUN mkdir -p .dcs/logs
+RUN mkdir -p .dcs/logs downloads
 RUN chown -R dcs:dcs .
 RUN chmod -R 755 .
 USER dcs
@@ -41,6 +42,7 @@ USER dcs
 COPY --from=builder --chown=dcs /build/bin/dcs /app/dcs
 
 VOLUME /app/.dcs
+VOLUME /app/downloads
 EXPOSE 6969
 
 ENTRYPOINT [ "/app/dcs", "service", "start" ]
