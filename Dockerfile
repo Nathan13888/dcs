@@ -3,6 +3,7 @@ FROM golang:1.16-alpine as builder
 WORKDIR /build/
 COPY . .
 RUN apk add make
+RUN apk add gcc musl-dev
 RUN make build
 #RUN go build -o ./bin/dcs
 
@@ -19,7 +20,7 @@ ENV UID=12345
 ENV GID=23456
 ## TIMEZONE
 RUN apk add tzdata
-RUN cp /usr/share/zoneinfo/America/Montevideo /etc/localtime
+RUN cp /usr/share/zoneinfo/America/Toronto /etc/localtime
 ## CREATE GROUP
 RUN addgroup --gid $GID $USER
 ## CREATE USER
