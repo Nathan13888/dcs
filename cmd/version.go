@@ -14,9 +14,10 @@ var versionCmd = &cobra.Command{
 	Short:   "Shows versioning info about DCS",
 	Long:    `Shows versioning info about DCS`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Version:\t", config.BuildVersion)
+		fmt.Printf("Version:\t %s (%s/%s)\n", config.BuildVersion, config.BuildGOOS, config.BuildARCH)
 		fmt.Println("Built by:\t", config.BuildUser)
 		fmt.Println("Build Time:\t", config.BuildTime)
+		fmt.Printf("Running on:\t %s/%s\n", config.GOOS, config.GOARCH)
 	},
 }
 

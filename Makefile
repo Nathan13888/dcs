@@ -9,7 +9,13 @@ build-n-install:
 
 build:
 	# *** BUILDING DCS ***
-	go build -o bin/dcs -ldflags "-X 'dcs/config.BuildUser=$$(id -u -n)' -X 'dcs/config.BuildTime=$$(date)' -s -w"
+	go build -o bin/dcs -ldflags "\
+		-X 'dcs/config.BuildVersion=$$(git rev-parse --abbrev-ref HEAD)' \
+		-X 'dcs/config.BuildUser=$$(id -u -n)' \
+		-X 'dcs/config.BuildTime=$$(date)' \
+		-X 'dcs/config.BuildGOOS=$$(go env GOOS)' \
+		-X 'dcs/config.BuildARCH=$$(go env GOARCH)' \
+		-s -w"
 
 docker-build:
 	docker build -t dcs .
