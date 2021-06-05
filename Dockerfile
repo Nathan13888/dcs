@@ -8,6 +8,7 @@ RUN make build
 
 # IMAGE: CONTAINER
 FROM alpine:latest
+MAINTAINER Nathan13888
 WORKDIR /app
 
 # ENV VARIABLES
@@ -38,6 +39,7 @@ USER dcs
 
 COPY --from=builder --chown=dcs /build/bin/dcs /app/dcs
 
+VOLUME /app/.dcs
 EXPOSE 6969
 
 ENTRYPOINT [ "/app/dcs", "service", "start" ]
