@@ -66,6 +66,9 @@ func Start(debug bool) {
 		Str("build_time", config.BuildTime).
 		Msg("Starting DCS Daemon Service")
 
+	InitDB()
+	RunUncompletedJobs()
+
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
 		if err := server.ListenAndServe(); err != nil {

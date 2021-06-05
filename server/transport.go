@@ -3,6 +3,8 @@ package server
 import (
 	"dcs/downloader"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type StatusResponse struct {
@@ -28,32 +30,34 @@ type CollectionLookupResponse struct {
 }
 
 type DownloadRequest struct {
-	DInfo downloader.DownloadInfo       `json:"dinfo"`
-	Props downloader.DownloadProperties `json:"props"`
+	DInfo downloader.DownloadInfo       `gorm:"embedded;<-:create" json:"dinfo"`
+	Props downloader.DownloadProperties `gorm:"embedded;<-:create" json:"props"`
 }
 
 type DownloadStatus string
 
 const (
-	QueuedJob   DownloadStatus = "queued"
-	RunningJob  DownloadStatus = "running"
-	FailedJob   DownloadStatus = "failed"
-	CompleteJob DownloadStatus = "complete"
+	QueuedJob    DownloadStatus = "queued"
+	RunningJob   DownloadStatus = "running"
+	FailedJob    DownloadStatus = "failed"
+	CancelledJob DownloadStatus = "cancelled"
+	CompleteJob  DownloadStatus = "complete"
 )
 
 type ProgressInfo struct {
 	Completion float64        `json:"completion"`
 	StartTime  time.Time      `json:"startTime"`
 	EndTime    time.Time      `json:"endTime"`
-	Status     DownloadStatus `json:"status"`
+	Status     DownloadStatus `gorm:"index" json:"status"`
 }
 
 type DownloadJob struct {
-	ID       string          `json:"id"`
-	Date     time.Time       `json:"date"`
-	Schedule time.Time       `json:"scheduledTime"`
-	Progress ProgressInfo    `json:"progress"`
-	Req      DownloadRequest `json:"req"`
+	gorm.Model
+	ID       string          `gorm:"primaryKey" json:"id"`
+	Date     time.Time       `gorm:"<-:create" json:"date"`
+	Schedule time.Time       `gorm:"<-:update" json:"scheduledTime"`
+	Progress ProgressInfo    `gorm:"embedded;embeddedPrefix:progress_" json:"progress"`
+	Req      DownloadRequest `gorm:"embedded" json:"req"`
 }
 
 type JobsResponse struct {

@@ -64,13 +64,19 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func getJobLogger(job *DownloadJob) zerolog.Logger {
-	log.Info().Msgf("Created logger for JOB %s", job.ID)
-	jobLogFile := getLogFile(getJobLogName(job.ID))
+// func getDBLogger() logger.Writer {
+// 	zl := log.Logger.With().Str("db", config.DSN()).Logger()
+// 	writer := logger.Writer{}
+// 	return writer
+// }
+
+func getJobLogger(id string) zerolog.Logger {
+	log.Info().Msgf("Created logger for JOB %s", id)
+	jobLogFile := getLogFile(getJobLogName(id))
 	// consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 	// multi := zerolog.MultiLevelWriter(consoleWriter, jobLogFile)
 	jobLogger := zerolog.New(jobLogFile).With().Timestamp().
-		Str("job_id", job.ID).
+		Str("job_id", id).
 		Logger()
 	return jobLogger
 }

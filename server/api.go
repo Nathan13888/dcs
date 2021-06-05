@@ -7,14 +7,12 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strings"
 	"time"
 
 	"dcs/config"
 	"dcs/downloader"
 	"dcs/scraper"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -153,7 +151,7 @@ func postDownload(w http.ResponseWriter, r *http.Request) {
 
 	// create new job
 	job := DownloadJob{
-		ID:  strings.ReplaceAll(uuid.New().String(), "-", ""),
+		ID:  GenerateID(),
 		Req: dreq,
 	}
 	log.Info().

@@ -3,15 +3,15 @@ package server
 import (
 	"dcs/config"
 	"dcs/downloader"
-	"fmt"
 	"math"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
-var jobs = make(map[string]*DownloadJob)
 var runningJobs = 0
 
 func AddJob(job *DownloadJob) {
@@ -22,44 +22,38 @@ func AddJob(job *DownloadJob) {
 	job.Progress.Status = QueuedJob
 	job.Progress.Completion = 0.0
 	job.Date = time.Now()
-	// add to queue
-	jobs[job.ID] = job
-
 	if job.Schedule.IsZero() {
 		job.Schedule = time.Now().Truncate(time.Minute)
 	}
+	DBAddJob(job)
 
 	CheckJob(job)
 }
 
 func CheckJob(job *DownloadJob) {
-	if !job.Schedule.IsZero() && job.Schedule.After(time.Now()) {
+	if runningJobs > config.DownloadLimit() {
 		return
 	}
-	if runningJobs > config.DownloadLimit() {
+	if !job.Schedule.IsZero() && job.Schedule.After(time.Now()) {
 		return
 	}
 	if job.Progress.Status != QueuedJob {
 		return
 	}
-	RunJob(job.ID)
+	RunJob(job)
 }
 
 func CheckQueue() {
-	for _, j := range jobs {
-		CheckJob(j)
+	for _, j := range DBGetJobs() {
+		CheckJob(&j)
 	}
 }
 
-func RunJob(id string) {
-	if !JobExists(id) {
-		logError(fmt.Errorf("job with ID %s cannot be found", id))
-		return
-	}
+func RunJob(job *DownloadJob) {
 	runningJobs++
-	job := jobs[id]
 	job.Progress.Status = RunningJob
 	job.Progress.StartTime = time.Now()
+	DBUpdateJob(job)
 	log.Info().
 		Str("job", job.ID).
 		Str("collection", job.Req.DInfo.Name).
@@ -70,7 +64,7 @@ func RunJob(id string) {
 		info.ProgressUpdater = func(f float64) {
 			job.Progress.Completion = math.Round(f*100) / 100
 		}
-		jobLogger := getJobLogger(job)
+		jobLogger := getJobLogger(job.ID)
 		info.Logger = jobLogger
 
 		err := downloader.Get(info, job.Req.Props)
@@ -87,6 +81,7 @@ func RunJob(id string) {
 			job.Progress.Status = CompleteJob
 		}
 		job.Progress.EndTime = time.Now()
+		DBUpdateJob(job)
 
 		log.Info().
 			Str("job", job.ID).
@@ -98,21 +93,30 @@ func RunJob(id string) {
 	}()
 }
 
+func RunUncompletedJobs() {
+	for _, job := range DBGetJobs() {
+		if job.Progress.Status == FailedJob {
+			continue
+		}
+		if job.Progress.Completion != 100.0 || job.Progress.Status == RunningJob {
+			RunJob(&job)
+		}
+	}
+}
+
 func GetJobInfo() ([]DownloadJob, []int64) {
-	var ret []DownloadJob
+	var jobs = DBGetJobs()
 	var sizes []int64
 	for _, job := range jobs {
-		ret = append(ret, *job)
 		s, err := downloader.LookupEpisode(job.Req.DInfo)
 		if err != nil && !os.IsNotExist(err) {
 			logError(err)
 		}
 		sizes = append(sizes, s)
 	}
-	return ret, sizes
+	return jobs, sizes
 }
 
-func JobExists(id string) bool {
-	_, ok := jobs[id]
-	return ok
+func GenerateID() string {
+	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }

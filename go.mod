@@ -10,7 +10,7 @@ require (
 	github.com/antchfx/xmlquery v1.3.3 // indirect
 	github.com/antchfx/xpath v1.1.11 // indirect
 	github.com/cavaliercoder/grab v2.0.0+incompatible
-	github.com/cheggaaa/pb/v3 v3.0.6
+	github.com/cheggaaa/pb/v3 v3.0.8
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gocolly/colly v1.2.0
@@ -23,7 +23,7 @@ require (
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
-	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/oopsguy/m3u8 v0.0.0-20190630112258-4150e93ec8f4 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/rs/zerolog v1.21.0
@@ -33,12 +33,14 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/temoto/robotstxt v1.1.1 // indirect
-	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
-	golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c // indirect
+	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110 // indirect
 	golang.org/x/text v0.3.5 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gorm.io/driver/sqlite v1.1.4 // indirect
+	gorm.io/gorm v1.21.10
 )

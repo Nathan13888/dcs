@@ -7,8 +7,8 @@ type DownloadInfo struct {
 	Link            string        `json:"link"`
 	Name            string        `json:"name"`
 	Num             float64       `json:"num"`
-	Logger          io.Writer     `json:"-"`
-	ProgressUpdater func(float64) `json:"-"`
+	Logger          io.Writer     `gorm:"-" json:"-"`
+	ProgressUpdater func(float64) `gorm:"-" json:"-"`
 }
 
 type DownloadProperties struct {
