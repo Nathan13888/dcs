@@ -14,15 +14,17 @@ var rmCmd = &cobra.Command{
 	Long: `Remove a drama for the DCS daemon to periodically check for updates and download.
 
 	USAGE: service rm <id of drama in list>`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		id := url.PathEscape(args[0])
-		fmt.Printf("Removing job %s\n\n", id)
-		res, err := Request("DELETE", "api/remove/"+id)
-		if err != nil {
-			panic(err)
+		for _, x := range args {
+			id := url.PathEscape(x)
+			fmt.Printf("Removing job %s\n", id)
+			res, err := Request("DELETE", "api/remove/"+id)
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("Response: %s\n", res.Status)
 		}
-		fmt.Printf("Response: %s\n", res.Status)
 	},
 }
 
