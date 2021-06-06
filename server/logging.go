@@ -47,20 +47,43 @@ func logError(err error) {
 	log.Error().Stack().Err(err).Msg("")
 }
 
+type loggingResponseWriter struct {
+	http.ResponseWriter
+	ResponseStatus int
+	ResponseSize   int
+}
+
+func (r *loggingResponseWriter) Write(b []byte) (int, error) {
+	size, err := r.ResponseWriter.Write(b)
+	r.ResponseSize += size
+	return size, err
+}
+
+func (r *loggingResponseWriter) WriteHeader(statusCode int) {
+	r.ResponseWriter.WriteHeader(statusCode)
+	r.ResponseStatus = statusCode
+}
+
 func loggingMiddleware(next http.Handler) http.Handler {
-	processedRequests++
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		processedRequests++
 		start := time.Now()
-		defer func() {
-			log.Info().
-				Str("method", r.Method).
-				Dur("resp_time", time.Since(start)).
-				Str("path", r.URL.Path).
-				Str("remote_address", r.RemoteAddr).
-				Str("user_agent", r.UserAgent()).
-				Msg("Access")
-		}()
-		next.ServeHTTP(w, r)
+		lw := &loggingResponseWriter{
+			ResponseWriter: w,
+			ResponseStatus: 200,
+			ResponseSize:   0,
+		}
+
+		next.ServeHTTP(lw, r)
+		log.Info().
+			Str("method", r.Method).
+			Int("status", lw.ResponseStatus).
+			Int("size", lw.ResponseSize).
+			Dur("duration", time.Since(start)).
+			Str("path", r.URL.Path).
+			Str("remote_address", r.RemoteAddr).
+			Str("user_agent", r.UserAgent()).
+			Msg("Access")
 	})
 }
 
