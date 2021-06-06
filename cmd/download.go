@@ -143,7 +143,8 @@ var downloadCmd = &cobra.Command{
 func downloadRange(episodes []scraper.EpisodeInfo, erange []float64, prop downloader.DownloadProperties) {
 	fmt.Printf("Attemping to download these episodes: %v\n\n", erange)
 
-	for _, e := range episodes {
+	for i := len(episodes) - 1; i >= 0; i-- {
+		e := episodes[i]
 		url := e.Link
 		for x := 0; x < len(erange); x++ { // erange should be sorted --> better efficiency
 			if e.Number == erange[x] && len(url) > 0 {
@@ -355,7 +356,7 @@ func download(link string, prop downloader.DownloadProperties) {
 
 			fmt.Printf("Job ID:     %s\n", job.ID)
 			fmt.Printf("Job Status: %s\n\n", job.Progress.Status)
-			fmt.Printf("Job downloads %s EPISODE %v\n", job.Req.DInfo.Name, job.Req.DInfo.Num)
+			fmt.Printf("Sent job for %s EPISODE %v\n\n\n", job.Req.DInfo.Name, job.Req.DInfo.Num)
 		} else {
 			fmt.Println("Downloading...")
 			err := downloader.Get(dinfo, prop)
