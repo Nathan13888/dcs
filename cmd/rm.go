@@ -18,7 +18,7 @@ var rmCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		id := url.PathEscape(args[0])
 		fmt.Printf("Removing job %s\n\n", id)
-		res, err := Request("GET", "api/remove/"+id)
+		res, err := Request("DELETE", "api/remove/"+id)
 		if err != nil {
 			panic(err)
 		}
