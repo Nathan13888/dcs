@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/spf13/cobra"
 )
@@ -13,8 +14,15 @@ var rmCmd = &cobra.Command{
 	Long: `Remove a drama for the DCS daemon to periodically check for updates and download.
 
 	USAGE: service rm <id of drama in list>`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("rm called")
+		id := url.PathEscape(args[0])
+		fmt.Printf("Removing job %s\n\n", id)
+		res, err := Request("GET", "api/remove/"+id)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Response: %s\n", res.Status)
 	},
 }
 

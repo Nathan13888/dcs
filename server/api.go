@@ -172,6 +172,27 @@ func postDownload(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
+func getRemoveJob(w http.ResponseWriter, r *http.Request) {
+	id, found := mux.Vars(r)["id"]
+	if !found {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	// job, exists := DBGetJob(id)
+	// if !exists || job.ID != id {
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// 	return
+	// }
+	res := GetDB().Delete(&DownloadJob{
+		ID: id,
+	})
+	if res.Error != nil {
+		internalError(w, res.Error)
+		return
+	}
+	log.Info().Str("job", id).Msg("Deleting job")
+}
+
 func getJobsList(w http.ResponseWriter, r *http.Request) {
 	jobs, sizes := GetJobInfo()
 	res := JobsResponse{
