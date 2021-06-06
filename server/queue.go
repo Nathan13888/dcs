@@ -63,6 +63,7 @@ func RunJob(job *DownloadJob) {
 		info := job.Req.DInfo
 		info.ProgressUpdater = func(f float64) {
 			job.Progress.Completion = math.Round(f*100) / 100
+			DBUpdateJob(job)
 		}
 		jobLogger := getJobLogger(job.ID)
 		info.Logger = jobLogger
@@ -98,7 +99,18 @@ func RunUncompletedJobs() {
 		if job.Progress.Status == FailedJob {
 			continue
 		}
-		if job.Progress.Completion != 100.0 || job.Progress.Status == RunningJob {
+		if job.Progress.Status == RunningJob {
+			if job.Progress.Completion >= 100 {
+				continue
+			}
+			size, err := downloader.LookupEpisode(job.Req.DInfo)
+			if err != nil && !os.IsNotExist(err) {
+				logError(err)
+				continue
+			}
+			if size < 1 {
+				continue
+			}
 			RunJob(&job)
 		}
 	}
