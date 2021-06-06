@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/olekukonko/tablewriter"
@@ -40,6 +41,36 @@ var listCmd = &cobra.Command{
 		if len(jobs.Jobs) != len(jobs.Sizes) {
 			panic(fmt.Errorf("invalid response received"))
 		}
+
+		colDates := make(map[string]time.Time)
+
+		// find the date of a collection's latest jobs
+		for _, job := range jobs.Jobs {
+			dj := job.Date
+			dm := colDates[job.Req.DInfo.Name]
+			if dm.IsZero() || dm.Before(dj) {
+				colDates[job.Req.DInfo.Name] = dj
+			}
+		}
+
+		sort.Slice(jobs.Jobs, func(a, b int) bool {
+			A := jobs.Jobs[a]
+			B := jobs.Jobs[b]
+			if A.Req.DInfo.Name == B.Req.DInfo.Name {
+				na := A.Req.DInfo.Num
+				nb := B.Req.DInfo.Num
+				if na == nb {
+					return A.Date.After(B.Date)
+				}
+				return na > nb
+			}
+			da := colDates[A.Req.DInfo.Name]
+			db := colDates[B.Req.DInfo.Name]
+			if da.IsZero() || db.IsZero() {
+				return false
+			}
+			return da.After(db)
+		})
 
 		table := tablewriter.NewWriter(os.Stdout)
 		table.SetHeader([]string{"ID", "Collection", "Episode", "Status", "Progress", "Scheduled", "Download Time", "Date", "Size"})
