@@ -8,13 +8,13 @@ import (
 )
 
 type StatusResponse struct {
-	Uptime             float64 `json:"uptime"`
-	ProcessedRequests  int64   `json:"processedRequests"`
-	DownloadedDramas   int     `json:"downloadedDramas"`
-	DownloadedEpisodes int     `json:"downloadedEpisodes"`
-	LibrarySize        int64   `json:"size"`
-	Version            string  `json:"version"`
-	BuildInfo          string  `json:"buildinfo"`
+	Uptime             time.Duration `json:"uptime"`
+	ProcessedRequests  int64         `json:"processedRequests"`
+	DownloadedDramas   int           `json:"downloadedDramas"`
+	DownloadedEpisodes int           `json:"downloadedEpisodes"`
+	LibrarySize        int64         `json:"size"`
+	Version            string        `json:"version"`
+	BuildInfo          string        `json:"buildinfo"`
 }
 
 type LogLookupResponse struct {

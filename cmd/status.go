@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -41,10 +42,7 @@ var statusCmd = &cobra.Command{
 				panic(err)
 			}
 
-			ut_sec := math.Mod(obj.Uptime, 60)
-			ut_min := int((obj.Uptime - ut_sec) / 60)
-
-			fmt.Printf("\nUptime:          \t%d minutes %d seconds\n", ut_min, int(ut_sec))
+			fmt.Printf("\nUptime:          \t%s\n", obj.Uptime.Round(time.Second).String())
 			fmt.Printf("Dramas:            \t%d\n", obj.DownloadedDramas)
 			fmt.Printf("Episodes:          \t%d\n", obj.DownloadedEpisodes)
 			fmt.Printf("Library Size:      \t%.3f GBs\n", float64(obj.LibrarySize)/math.Pow(1024, 3))

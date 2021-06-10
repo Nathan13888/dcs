@@ -35,7 +35,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		logError(err)
 	}
 	res := StatusResponse{
-		Uptime:             time.Since(StartTime).Seconds(),
+		Uptime:             time.Since(StartTime),
 		ProcessedRequests:  processedRequests,
 		DownloadedDramas:   dd,
 		DownloadedEpisodes: de,
