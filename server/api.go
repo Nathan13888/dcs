@@ -40,7 +40,7 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 		DownloadedDramas:   dd,
 		DownloadedEpisodes: de,
 		LibrarySize:        csize,
-		Version:            config.BuildVersion,
+		Version:            fmt.Sprintf("%s (%s/%s)", config.BuildVersion, config.BuildGOOS, config.BuildARCH),
 		BuildInfo:          fmt.Sprintf("Built on %s (by %s)", config.BuildTime, config.BuildUser),
 	}
 	json.NewEncoder(w).Encode(res)
