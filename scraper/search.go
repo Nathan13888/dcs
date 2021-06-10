@@ -18,15 +18,40 @@ type DramaInfo struct {
 
 // Search - Search for something...
 func Search(qry string) []DramaInfo {
-	url := fmt.Sprintf("%s/search?type=movies&keyword=%s", URL, url.QueryEscape(qry))
+	qe := url.QueryEscape(qry)
+	var url string
+	var nameQry string
+	if ASIANLOAD {
+		url = fmt.Sprintf("%s/search.html?&keyword=%s", URL, qe)
+		nameQry = "div.name"
+	} else {
+		url = fmt.Sprintf("%s/search?type=movies&keyword=%s", URL, qe)
+		nameQry = "h3.title"
+	}
 
 	res := []DramaInfo{}
 
 	c := getCollector()
 
 	// check if there were results
-	c.OnHTML("h3.title", func(e *colly.HTMLElement) {
+	c.OnHTML(nameQry, func(e *colly.HTMLElement) {
 		name := strings.Trim(e.DOM.Contents().Text(), " \n")
+		if len(name) > 10 && ASIANLOAD { // trim away " Episode X" from the end
+			end := len(name)
+			for i := len(name) - 1; i >= 0; i-- { // remove all numbers
+				c := name[i]
+				if ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') {
+					break
+				}
+				if ('0' <= c && c <= '9') || (c == ' ') {
+					end--
+				}
+			}
+			if end >= 8 && strings.EqualFold(name[end-7:end], "episode") {
+				end -= 8
+			}
+			name = name[:end]
+		}
 
 		subURL, _ := e.DOM.Parent().Attr("href")
 		fullURL := e.Request.AbsoluteURL(subURL)

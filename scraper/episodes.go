@@ -22,6 +22,7 @@ func GetEpisodesByLink(link string) []EpisodeInfo {
 
 	var name string
 
+	// TODO: FIX for asianload `div.video-details span.date`
 	c.OnHTML("div.info h1", func(e *colly.HTMLElement) {
 		name = e.DOM.Text()
 	})
@@ -41,8 +42,18 @@ func GetEpisodes(drama DramaInfo) []EpisodeInfo {
 	c := getCollector()
 	// TODO: cache page
 
-	c.OnHTML("ul.all-episode", func(e *colly.HTMLElement) {
-		e.ForEach("li a.img h3.title", func(i int, ee *colly.HTMLElement) {
+	var ulQry string
+	var liQry string
+	if ASIANLOAD {
+		ulQry = "ul.listing.lists"
+		liQry = "li a div.name"
+	} else {
+		ulQry = "ul.all-episode"
+		liQry = "li a.img h3.title"
+	}
+
+	c.OnHTML(ulQry, func(e *colly.HTMLElement) {
+		e.ForEach(liQry, func(i int, ee *colly.HTMLElement) {
 			parent := ee.DOM.Parent()
 			link, _ := parent.Attr("href")
 			fullname := strings.Trim(ee.DOM.Contents().Text(), " \n")

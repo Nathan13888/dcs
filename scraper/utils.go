@@ -16,6 +16,8 @@ import (
 	"github.com/gocolly/colly"
 )
 
+var ASIANLOAD bool = false
+
 func printObj(obj interface{}) {
 	resJSON, _ := json.MarshalIndent(obj, "  ", "    ")
 	fmt.Println(string(resJSON))
