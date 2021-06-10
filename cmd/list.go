@@ -100,7 +100,7 @@ var listCmd = &cobra.Command{
 				job.Req.DInfo.Name,
 				fmt.Sprintf("%v", job.Req.DInfo.Num),
 				string(job.Progress.Status),
-				fmt.Sprintf("%.2f %%", job.Progress.Completion),
+				fmt.Sprintf("%.2f %%", job.Progress.Completion*100),
 				job.Schedule.Format(time.RFC822),
 				dt,
 				job.Date.Format(time.RFC822),
@@ -110,7 +110,7 @@ var listCmd = &cobra.Command{
 		}
 		table.SetFooter([]string{"", "", "",
 			"Total Progress", fmt.Sprintf("%.1f %%",
-				totalProgress/float64(len(jobs.Jobs))),
+				totalProgress/float64(len(jobs.Jobs))*100),
 			"Total DT", totalDur.Round(time.Millisecond).String(),
 			"Total Size", fmt.Sprintf("%.1f GB",
 				float64(sum)/math.Pow(1024, 3)),
