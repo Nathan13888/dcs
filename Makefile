@@ -8,6 +8,10 @@ build-n-install:
 	make install
 
 build:
+	# GOOS
+	echo $$GOOS
+	# GOARCH
+	echo $$GOARCH
 	# *** BUILDING DCS ***
 	go build -o bin/dcs -ldflags "\
 		-X 'dcs/config.BuildVersion=$$(git rev-parse --abbrev-ref HEAD)' \
