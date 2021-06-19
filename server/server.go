@@ -53,7 +53,9 @@ func Start(debug bool) {
 	r.HandleFunc("/api/download", postDownload).Methods("POST")
 	r.HandleFunc("/api/remove/{id}", getRemoveJob).Methods("DELETE")
 	r.HandleFunc("/api/jobs", getJobsList).Methods("GET")
-	r.PathPrefix("/content/").Handler(http.StripPrefix("/content/", http.FileServer(http.Dir(config.DownloadPath()))))
+	if config.EnableFileServer() {
+		r.PathPrefix("/content/").Handler(http.StripPrefix("/content/", http.FileServer(http.Dir(config.DownloadPath()))))
+	}
 
 	r.Use(loggingMiddleware)
 
@@ -68,6 +70,7 @@ func Start(debug bool) {
 		Msg("Starting DCS Daemon Service")
 	log.Info().
 		Str("download_path", config.DownloadPath()).
+		Bool("enable_file_server", config.EnableFileServer()).
 		Int("download_limit", config.DownloadLimit()).
 		Str("dsn", config.DSN()).
 		Msg("These are the config settings")

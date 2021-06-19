@@ -54,6 +54,7 @@ func SetDefaults() {
 	viper.SetDefault("DownloadPath", path.Join(GetHome(), "Downloads", "DCS"))
 	viper.SetDefault("DaemonHost", "localhost")
 	viper.SetDefault("DaemonPort", 6969)
+	viper.SetDefault("EnableFileServer", false)
 	viper.SetDefault("DownloadLimit", 2)
 	viper.SetDefault("DSN", path.Join(GetConfigHome(), "dcs.db"))
 	// viper.SetDefault("DSN",
@@ -66,6 +67,10 @@ func DownloadPath() string {
 
 func DaemonURL() (string, int) {
 	return viper.GetString("DaemonHost"), viper.GetInt("DaemonPort")
+}
+
+func EnableFileServer() bool {
+	return viper.GetBool("EnableFileServer")
 }
 
 func DownloadLimit() int {
