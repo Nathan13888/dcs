@@ -314,7 +314,8 @@ func download(episode string, prop downloader.DownloadProperties) {
 
 	fmt.Printf("Attemping to download from '%s'\n\n", episode)
 	if prop.ManualMode {
-		name, episodeNum, _ := scraper.GetInfo(episode)
+		name, episodeNum, streaming := scraper.GetInfo(episode)
+		fmt.Printf("\nFOUND STREAMING LINK: `%s`\n", streaming)
 		manualLink, err := prompt.String(fmt.Sprintf("Enter link for %s #%v", name, episodeNum))
 		if err == promptui.ErrAbort {
 			os.Exit(0)
