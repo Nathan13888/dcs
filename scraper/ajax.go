@@ -11,15 +11,17 @@ import (
 	"github.com/gocolly/colly"
 )
 
+// TODO: implement (string,error) return
 // ScrapeAjax - Get the link to the video source of an episode
 func ScrapeAjax(ajax AjaxResult) string {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://%s%s&refer=none", ajax.Domain, ajax.Ajax)
 	req, _ := http.NewRequest("GET", url, bytes.NewBuffer([]byte{}))
+	req.Header.Set("User-Agent", USERAGENT)
 	req.Header.Set("accept", "application/json, text/javascript, */*; q=0.01")
 	// req.Header.Set("accept-langauge","en-US,en;q=0.9,zh-TW;q=0.8,zh-CN;q=0.7,zh:q=0.6")
-	req.Header.Set("sec-fetch-mode", "cors")
-	req.Header.Set("sec-fetch-site", "same-origin")
+	// req.Header.Set("sec-fetch-mode", "cors")
+	// req.Header.Set("sec-fetch-site", "same-origin")
 	req.Header.Set("x-requested-with", "XMLHttpRequest")
 
 	res, err := client.Do(req)
@@ -35,19 +37,21 @@ func ScrapeAjax(ajax AjaxResult) string {
 	decoder.DisallowUnknownFields()
 	decoder.Decode(&obj)
 
-	// fmt.Println(obj)
+	if len(obj.Source) < 1 {
+		fmt.Println("INVALID AJAX FOUND FROM", url)
+		fmt.Println(obj)
+	}
 
 	link := obj.Source[0].File
 
 	return link
 }
 
-// TODO: improve link searching
-// GetAjax - Find the link for the Ajax
-func GetAjax(episode string) AjaxResult {
-	res := AjaxResult{
-		Found: false,
-	}
+func GetInfo(episode string) (string, float64, string) {
+	var name string
+	var episodeNum float64
+	var streaming string
+
 	var epQry string
 	var nameQry string
 	var iframeQry string
@@ -77,37 +81,50 @@ func GetAjax(episode string) AjaxResult {
 			fmt.Println(err)
 			// res.Num = -1
 		} else {
-			res.Num = conv
+			episodeNum = conv
 		}
 	})
 
 	c.OnHTML(nameQry, func(e *colly.HTMLElement) {
-		res.Name = e.DOM.Text()
+		name = e.DOM.Text()
 	})
 
 	c.OnHTML(iframeQry, func(e *colly.HTMLElement) {
 		src := strings.Trim(e.Attr("src"), " /")
 		index := strings.Index(src, "streaming")
 		if len(src) > 0 {
-			res.Found = true // TODO: better verification
-			streaming := src[index:]
-			res.Streaming = streaming
-			ajax := strings.Replace(streaming, "streaming", "ajax", 1)
-			res.Ajax = ajax
-			domain := src[:index]
-			res.Domain = domain
-			// fmt.Println(src)
-			// fmt.Println(streaming)
-			// fmt.Println(index)
-			// fmt.Println(streaming)
-			// fmt.Println(res.Domain)
+			streaming = src[index:]
 		}
 	})
 	c.Visit(episode)
 
+	return name, episodeNum, streaming
+}
+
+// GetAjax - Find the link for the Ajax
+func GetAjax(episode string) AjaxResult {
+	name, episodeNum, streaming := GetInfo(episode)
+	ajax := strings.Replace(streaming, "streaming", "ajax", 1)
+
+	res := AjaxResult{
+		Name:      name,
+		Num:       episodeNum,
+		Found:     false,
+		Streaming: streaming,
+	}
+
+	// TODO: better verification
+	if len(streaming) > 0 {
+		res.Found = true
+	}
+	res.Ajax = ajax
+	// domain := src[:index]
+	// res.Domain = domain
+
 	return res
 }
 
+//TODO: GET RID OF AjaxResult
 // AjaxResult - The result of scraping the ajax url from an episode link
 type AjaxResult struct {
 	Found     bool
