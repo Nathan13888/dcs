@@ -65,12 +65,17 @@ var downloadCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+		manual, err := cmd.Flags().GetBool("manual")
+		if err != nil {
+			panic(err)
+		}
 
 		prop := downloader.DownloadProperties{
 			Overwrite:   overwrite,
 			Interactive: !interactive,
 			IgnoreM3U8:  !ignorem3u8,
 			Remote:      remote,
+			ManualMode:  manual,
 		}
 
 		if len(args) == 1 && scraper.IsLink(args[0]) {
@@ -303,70 +308,80 @@ func searchDrama() *scraper.DramaInfo {
 }
 
 // TODO: update error handling and prompts
-func download(link string, prop downloader.DownloadProperties) {
-	remote := prop.Remote
-
+func download(episode string, prop downloader.DownloadProperties) {
+	var dinfo downloader.DownloadInfo
 	url := GetRemoteURL("api/download")
 
-	ajax := scraper.GetAjax(link)
-	if ajax.Found || (prop.Interactive && prompt.Confirm("Ajax not found. Would you like to proceed downloading?")) {
-		fmt.Printf("Attemping to download from '%s'\n\n", link)
-		fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
-		link := scraper.ScrapeAjax(ajax)
-		fmt.Printf("Found '%s'\n\n", link)
-		// TODO: prompt confirm download
-		dinfo := downloader.DownloadInfo{
-			Link: link,
-			Name: scraper.EscapeName(ajax.Name),
-			Num:  ajax.Num,
+	fmt.Printf("Attemping to download from '%s'\n\n", episode)
+	if prop.ManualMode {
+		name, episodeNum, _ := scraper.GetInfo(episode)
+		manualLink, err := prompt.String(fmt.Sprintf("Enter link for %s #%v", name, episodeNum))
+		if err == promptui.ErrAbort {
+			os.Exit(0)
 		}
-		if remote {
-
-			// TODO: change protocol
-
-			jobinfo, err := json.Marshal(server.DownloadRequest{
-				DInfo: dinfo,
-				Props: prop,
-			})
-			if err != nil {
-				panic(err)
-			}
-
-			req, err := http.NewRequest("POST", url, bytes.NewBuffer(jobinfo))
-			if err != nil {
-				panic(err)
-			}
-			req.Header.Set("Content-Type", "application/json")
-
-			client := &http.Client{}
-			res, err := client.Do(req)
-			if err != nil {
-				panic(err)
-			}
-			defer res.Body.Close()
-
-			var job server.DownloadJob
-			fmt.Printf("Received Status: %s\n", res.Status)
-			decoder := json.NewDecoder(res.Body)
-			decoder.DisallowUnknownFields()
-			err = decoder.Decode(&job)
-			if err != nil {
-				panic(err)
-			}
-
-			fmt.Printf("Job ID:     %s\n", job.ID)
-			fmt.Printf("Job Status: %s\n\n", job.Progress.Status)
-			fmt.Printf("Sent job for %s EPISODE %v\n\n\n", job.Req.DInfo.Name, job.Req.DInfo.Num)
-		} else {
-			fmt.Println("Downloading...")
-			err := downloader.Get(dinfo, prop)
-			if err != nil {
-				panic(err)
-			}
+		fmt.Printf("\nEntered MANUAL link: `%s`\n\n", manualLink)
+		dinfo = downloader.DownloadInfo{
+			Link: strings.Trim(manualLink, " \n"),
+			Name: scraper.EscapeName(name),
+			Num:  episodeNum,
 		}
 	} else {
-		fmt.Print("FAILED to find episode...\n\n")
-		fmt.Printf("Found AJAX: %v\n", ajax)
+		ajax := scraper.GetAjax(episode)
+		if ajax.Found || (prop.Interactive && prompt.Confirm("Ajax not found. Would you like to proceed downloading?")) {
+			fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
+			link := scraper.ScrapeAjax(ajax)
+			fmt.Printf("Found '%s'\n\n", link)
+			// TODO: prompt confirm download
+			dinfo = downloader.DownloadInfo{
+				Link: link,
+				Name: scraper.EscapeName(ajax.Name),
+				Num:  ajax.Num,
+			}
+		} else {
+			panic(fmt.Errorf("found bad AJAX: %v", ajax))
+		}
+	}
+	if prop.Remote {
+		// TODO: change protocol
+		jobinfo, err := json.Marshal(server.DownloadRequest{
+			DInfo: dinfo,
+			Props: prop,
+		})
+		if err != nil {
+			panic(err)
+		}
+
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jobinfo))
+		if err != nil {
+			panic(err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		res, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		defer res.Body.Close()
+
+		var job server.DownloadJob
+		fmt.Printf("Received Status: %s\n", res.Status)
+		decoder := json.NewDecoder(res.Body)
+		decoder.DisallowUnknownFields()
+		err = decoder.Decode(&job)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("Job ID:     %s\n", job.ID)
+		fmt.Printf("Job Status: %s\n\n", job.Progress.Status)
+		fmt.Printf("Sent job for %s EPISODE %v\n\n\n", job.Req.DInfo.Name, job.Req.DInfo.Num)
+	} else {
+		fmt.Println("Downloading...")
+		err := downloader.Get(dinfo, prop)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -379,6 +394,7 @@ func init() {
 	downloadCmd.Flags().BoolP("dont-ignore-m3u8", "m", false, "Download M3U8 files")
 	downloadCmd.Flags().BoolP("bulk", "b", false, "bulk mode")
 	downloadCmd.Flags().BoolP("tryout", "t", false, "tryout a drama (just assume ep 1)")
+	downloadCmd.Flags().BoolP("manual", "M", false, "manual mode (use own download link)")
 
 	// Here you will define your flags and configuration settings.
 

@@ -15,7 +15,8 @@ type DownloadProperties struct {
 	Overwrite   bool `json:"overwrite"`
 	Interactive bool `json:"interactive"`
 	IgnoreM3U8  bool `json:"ignoreM3U8"`
-	Remote      bool `json:"remote"`
+	Remote      bool `json:"-"`
+	ManualMode  bool `json:"-"`
 }
 
 // PathInfo - Path information about downloaded content
