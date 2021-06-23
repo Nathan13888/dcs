@@ -31,7 +31,11 @@ func GetConfigHome() string {
 
 func Configure() {
 	// Search config in home directory with name ".dcs" (without extension).
-	viper.SetConfigName("config.json")
+	if IS_DEV() {
+		viper.SetConfigName("config.dev.json")
+	} else {
+		viper.SetConfigName("config.json")
+	}
 	viper.SetConfigType("json")
 	viper.AutomaticEnv()
 	viper.AddConfigPath(GetConfigHome())

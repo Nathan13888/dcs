@@ -11,3 +11,7 @@ var (
 	GOOS         = runtime.GOOS
 	GOARCH       = runtime.GOARCH
 )
+
+func IS_DEV() bool {
+	return BuildVersion == "development"
+}
