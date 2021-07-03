@@ -15,6 +15,60 @@ type EpisodeInfo struct {
 	Link   string
 }
 
+func GetInfo(episode string) (string, float64, string) {
+	var name string
+	var episodeNum float64
+	var streaming string
+
+	var epQry string
+	var nameQry string
+	var iframeQry string
+	if ASIANLOAD {
+		epQry = "div.video-info-left h1"
+		nameQry = "div.video-details span"
+		iframeQry = "div.play-video iframe"
+	} else {
+		epQry = "div.watch-drama h1"
+		nameQry = "div.category a"
+		iframeQry = "div.watch_video iframe"
+	}
+
+	c := getCollector()
+
+	// Find episode number
+	c.OnHTML(epQry, func(e *colly.HTMLElement) {
+		num := strings.Split(strings.Trim(e.DOM.Text(), " \n"), " ")
+		var parse string
+		if ASIANLOAD {
+			parse = num[len(num)-3]
+		} else {
+			parse = num[len(num)-1]
+		}
+		conv, err := strconv.ParseFloat(parse, 64)
+		if err != nil {
+			fmt.Println(err)
+			// res.Num = -1
+		} else {
+			episodeNum = conv
+		}
+	})
+
+	c.OnHTML(nameQry, func(e *colly.HTMLElement) {
+		name = e.DOM.Text()
+	})
+
+	c.OnHTML(iframeQry, func(e *colly.HTMLElement) {
+		src := strings.Trim(e.Attr("src"), " /")
+		index := strings.Index(src, "streaming")
+		if len(src) > 0 {
+			streaming = src[index:]
+		}
+	})
+	c.Visit(episode)
+
+	return name, episodeNum, streaming
+}
+
 // GetEpisodesByLink - GetEpisodes by just give a link
 func GetEpisodesByLink(link string) []EpisodeInfo {
 	// TODO: use GetInfo() instead
