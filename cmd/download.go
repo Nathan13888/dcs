@@ -16,6 +16,7 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // downloadCmd represents the download command
@@ -65,18 +66,15 @@ var downloadCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		manual, err := cmd.Flags().GetBool("manual")
-		if err != nil {
-			panic(err)
-		}
 
 		prop := downloader.DownloadProperties{
 			Overwrite:   overwrite,
 			Interactive: !interactive,
 			IgnoreM3U8:  !ignorem3u8,
 			Remote:      remote,
-			ManualMode:  manual,
 		}
+
+		fmt.Println("Found Download Method:", config.DownloadMethod())
 
 		if len(args) == 1 && scraper.IsLink(args[0]) {
 			download(args[0], prop)
@@ -313,7 +311,11 @@ func download(episode string, prop downloader.DownloadProperties) {
 	url := GetRemoteURL("api/download")
 
 	fmt.Printf("Attemping to download from '%s'\n\n", episode)
-	if prop.ManualMode {
+	method := config.DownloadMethod()
+	fmt.Println("\nUsing Download Method:", method+"\n")
+DownloadMethod:
+	switch method {
+	case config.ManualMethod:
 		name, episodeNum, streaming := scraper.GetInfo(episode)
 		fmt.Printf("\nFOUND STREAMING LINK: `%s`\n", streaming)
 		manualLink, err := prompt.String(fmt.Sprintf("Enter link for %s #%v", name, episodeNum))
@@ -326,7 +328,7 @@ func download(episode string, prop downloader.DownloadProperties) {
 			Name: scraper.EscapeName(name),
 			Num:  episodeNum,
 		}
-	} else {
+	case config.AjaxMethod:
 		ajax := scraper.GetAjax(episode)
 		if ajax.Found || (prop.Interactive && prompt.Confirm("Ajax not found. Would you like to proceed downloading?")) {
 			fmt.Printf("Found AJAX endpoint '%s'\n\n", ajax.Ajax)
@@ -341,6 +343,13 @@ func download(episode string, prop downloader.DownloadProperties) {
 		} else {
 			panic(fmt.Errorf("found bad AJAX: %v", ajax))
 		}
+	default:
+		if prompt.Confirm("Method selected does not exist. Would you like to exit?") {
+			os.Exit(0)
+		}
+		fmt.Println("Defaulting to DEFAULTMETHOD")
+		method = config.DEFAULTMETHOD
+		goto DownloadMethod
 	}
 	if prop.Remote {
 		// TODO: change protocol
@@ -395,5 +404,7 @@ func init() {
 	downloadCmd.Flags().BoolP("dont-ignore-m3u8", "m", false, "Download M3U8 files")
 	downloadCmd.Flags().BoolP("bulk", "b", false, "bulk mode")
 	downloadCmd.Flags().BoolP("tryout", "t", false, "tryout a drama (just assume ep 1)")
-	downloadCmd.Flags().BoolP("manual", "M", false, "manual mode (use own download link)")
+	// downloadCmd.Flags().BoolP("manual", "M", false, "manual mode (use own download link)"
+	downloadCmd.Flags().StringP("method", "M", string(config.DEFAULTMETHOD), "the download method to use")
+	viper.BindPFlag("DownloadMethod", downloadCmd.Flags().Lookup("method"))
 }

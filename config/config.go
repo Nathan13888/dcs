@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -56,6 +57,7 @@ func Configure() {
 
 func SetDefaults() {
 	viper.SetDefault("DownloadPath", path.Join(GetHome(), "Downloads", "DCS"))
+	viper.SetDefault("DownloadMethod", DEFAULTMETHOD) // refer to DMethod
 	viper.SetDefault("DaemonHost", "localhost")
 	viper.SetDefault("DaemonPort", 6969)
 	viper.SetDefault("EnableFileServer", false)
@@ -67,6 +69,35 @@ func SetDefaults() {
 
 func DownloadPath() string {
 	return viper.GetString("DownloadPath")
+}
+
+type DMethod string
+
+const (
+	AjaxMethod    DMethod = "ajax"
+	LDMethod      DMethod = "ld" // lookup download
+	ManualMethod  DMethod = "manual"
+	DEFAULTMETHOD DMethod = ManualMethod
+)
+
+func DownloadMethod() DMethod {
+	s := strings.ToLower(viper.GetString("DownloadMethod"))
+	// methods := []DMethod{
+	// 	AjaxMethod,
+	// 	LDMethod,
+	// 	ManualMethod,
+	// }
+	// found := false
+	// for _, m := range methods {
+	// 	if m == DMethod(strings.ToLower(s)) {
+	// 		found = true
+	// 		continue
+	// 	}
+	// }
+	// if !found {
+	// 	return DEFAULTMETHOD
+	// }
+	return DMethod(s)
 }
 
 func DaemonURL() (string, int) {

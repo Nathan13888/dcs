@@ -1,6 +1,8 @@
 package downloader
 
-import "io"
+import (
+	"io"
+)
 
 // DownloadInfo - Information you need to Download
 type DownloadInfo struct {
@@ -16,7 +18,6 @@ type DownloadProperties struct {
 	Interactive bool `json:"interactive"`
 	IgnoreM3U8  bool `json:"ignoreM3U8"`
 	Remote      bool `json:"remote"`
-	ManualMode  bool `json:"-"`
 }
 
 // PathInfo - Path information about downloaded content
