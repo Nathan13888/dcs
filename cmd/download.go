@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -308,7 +309,7 @@ func searchDrama() *scraper.DramaInfo {
 // TODO: update error handling and prompts
 func download(episode string, prop downloader.DownloadProperties) {
 	var dinfo downloader.DownloadInfo
-	url := GetRemoteURL("api/download")
+	u := GetRemoteURL("api/download")
 
 	fmt.Printf("Attemping to download from '%s'\n\n", episode)
 	method := config.DownloadMethod()
@@ -343,6 +344,30 @@ DownloadMethod:
 		} else {
 			panic(fmt.Errorf("found bad AJAX: %v", ajax))
 		}
+	case config.LDMethod:
+		name, episodeNum, streaming := scraper.GetInfo(episode)
+		fmt.Printf("\nFOUND STREAMING LINK: `%s`\n", streaming)
+
+		parsed, err := url.Parse(streaming)
+		if err != nil {
+			fmt.Println(err)
+			// TODO: prompt "error continue"
+		}
+		id := parsed.Query().Get("id")
+		fmt.Println("Using ID", id)
+		if len(id) == 0 {
+			if prompt.Confirm("ID not found, would you like to enter your own ID?") {
+				id, _ = prompt.String("Enter your own ID")
+			} else {
+				os.Exit(1)
+			}
+		}
+
+		dinfo = downloader.DownloadInfo{
+			Link: scraper.ScrapeLD(id),
+			Name: scraper.EscapeName(name),
+			Num:  episodeNum,
+		}
 	default:
 		if prompt.Confirm("Method selected does not exist. Would you like to exit?") {
 			os.Exit(0)
@@ -361,7 +386,7 @@ DownloadMethod:
 			panic(err)
 		}
 
-		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jobinfo))
+		req, err := http.NewRequest("POST", u, bytes.NewBuffer(jobinfo))
 		if err != nil {
 			panic(err)
 		}
