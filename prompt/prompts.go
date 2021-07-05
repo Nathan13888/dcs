@@ -14,7 +14,6 @@ func Drama(dramas []scraper.DramaInfo) (*scraper.DramaInfo, error) {
 	type DramaItem struct {
 		Name     string
 		Link     string
-		Year     string
 		Episodes string
 		Desc     string
 		Info     *scraper.DramaInfo
@@ -33,8 +32,8 @@ func Drama(dramas []scraper.DramaInfo) (*scraper.DramaInfo, error) {
 	// how the prompt should be displayed
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . | white | bold }}",
-		Active:   "\U0001F449 {{ .Name | green | bold }} [{{ .Year | cyan }}]",
-		Inactive: "  {{ .Name | red }} [{{ .Year | cyan }}]",
+		Active:   "\U0001F449 {{ .Name | green | bold }}",
+		Inactive: "  {{ .Name | red }}",
 		Selected: "\U0001F449 {{ .Name | green }}",
 		Details: `
 
@@ -47,7 +46,7 @@ func Drama(dramas []scraper.DramaInfo) (*scraper.DramaInfo, error) {
 	searcher := func(input string, index int) bool {
 		item := items[index]
 		properties := []string{
-			item.Name, item.Year,
+			item.Name,
 		}
 
 		return len(fuzzy.FindNormalizedFold(input, properties)) > 0
