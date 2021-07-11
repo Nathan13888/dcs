@@ -52,6 +52,7 @@ func Start(debug bool) {
 	r.HandleFunc("/api/lookup/collection/{name}", getLookupCollection).Methods("GET")
 	r.HandleFunc("/api/download", postDownload).Methods("POST")
 	r.HandleFunc("/api/remove/{id}", getRemoveJob).Methods("DELETE")
+	r.HandleFunc("/api/purgejobs", getPurgeJobs).Methods("GET")
 	r.HandleFunc("/api/jobs", getJobsList).Methods("GET")
 	if config.EnableFileServer() {
 		r.PathPrefix("/content/").Handler(http.StripPrefix("/content/", http.FileServer(http.Dir(config.DownloadPath()))))

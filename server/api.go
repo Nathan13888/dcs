@@ -183,6 +183,10 @@ func getRemoveJob(w http.ResponseWriter, r *http.Request) {
 	// 	w.WriteHeader(http.StatusBadRequest)
 	// 	return
 	// }
+	deleteJob(id, w)
+}
+
+func deleteJob(id string, w http.ResponseWriter) {
 	res := GetDB().Delete(&DownloadJob{
 		ID: id,
 	})
@@ -193,7 +197,24 @@ func getRemoveJob(w http.ResponseWriter, r *http.Request) {
 	log.Info().Str("job", id).Msg("Deleting job")
 }
 
+func getPurgeJobs(w http.ResponseWriter, r *http.Request) {
+	jobs, sizes := GetJobInfo()
+	purged := JobsResponse{
+		Jobs:  make([]DownloadJob, 0),
+		Sizes: make([]int64, 0),
+	}
+	for i, j := range jobs {
+		if j.Progress.Status == FailedJob ||
+			(j.Progress.Status == RunningJob && time.Since(j.Progress.StartTime) > (time.Hour*24)) {
+			deleteJob(j.ID, w)
+			purged.Jobs = append(purged.Jobs, j)
+			purged.Sizes = append(purged.Sizes, sizes[i])
+		}
+	}
+}
+
 func getJobsList(w http.ResponseWriter, r *http.Request) {
+	// TODO: verify sizes returned after equal??
 	jobs, sizes := GetJobInfo()
 	res := JobsResponse{
 		Jobs:  jobs,
