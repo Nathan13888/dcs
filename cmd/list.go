@@ -34,14 +34,19 @@ var listCmd = &cobra.Command{
 			panic(err)
 		}
 
-		if len(jobs.Jobs) == 0 { // no jobs found
-			fmt.Println("No jobs found...")
-			return
-		}
 		if len(jobs.Jobs) != len(jobs.Sizes) {
 			panic(fmt.Errorf("invalid response received"))
 		}
 
+		renderJobsTable(jobs)
+	},
+}
+
+func renderJobsTable(jobs server.JobsResponse) {
+	if len(jobs.Jobs) == 0 { // no jobs found
+		fmt.Println("No jobs found...")
+		return
+	} else {
 		colDates := make(map[string]time.Time)
 
 		// find the date of a collection's latest jobs
@@ -120,7 +125,7 @@ var listCmd = &cobra.Command{
 		table.SetAutoWrapText(true)
 		table.SetAutoMergeCellsByColumnIndex([]int{1}) // merge dramas
 		table.Render()
-	},
+	}
 }
 
 func init() {
