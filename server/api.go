@@ -211,6 +211,7 @@ func getPurgeJobs(w http.ResponseWriter, r *http.Request) {
 			purged.Sizes = append(purged.Sizes, sizes[i])
 		}
 	}
+	json.NewEncoder(w).Encode(purged)
 }
 
 func getJobsList(w http.ResponseWriter, r *http.Request) {
