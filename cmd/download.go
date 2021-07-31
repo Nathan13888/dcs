@@ -15,7 +15,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -35,38 +34,24 @@ var downloadCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO: sanitize arguments
 		overwrite, err := cmd.Flags().GetBool("overwrite")
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		interactive, err := cmd.Flags().GetBool("no-interactive")
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		ignorem3u8, err := cmd.Flags().GetBool("dont-ignore-m3u8")
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		remote, err := cmd.Flags().GetBool("remote")
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		if remote {
 			if !scraper.Ping(config.DaemonURL()) {
 				panic(fmt.Errorf("remote server NOT online"))
 			}
 		}
 		noRecent, err := cmd.Flags().GetBool("no-recent")
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		bulkMode, err := cmd.Flags().GetBool("bulk")
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		tryout, err := cmd.Flags().GetBool("tryout")
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 
 		prop := downloader.DownloadProperties{
 			Overwrite:   overwrite,
@@ -119,11 +104,7 @@ var downloadCmd = &cobra.Command{
 					episodeRange = []float64{1.0}
 				} else {
 					res, err := prompt.String("Episode Range")
-					if err == promptui.ErrInterrupt {
-						os.Exit(0)
-					} else if err != nil {
-						panic(err)
-					}
+					prompt.ProcessPromptError(err)
 					episodeRange = scraper.GetRange(strings.TrimSpace(res))
 				}
 				targets = append(targets, Target{
@@ -174,9 +155,8 @@ func lookupDownloadedEpisodes(drama scraper.DramaInfo, remote bool) (int, []stri
 	if remote {
 		var obj server.CollectionLookupResponse
 		res, err := Request("GET", "api/lookup/collection/"+drama.Name)
-		if err != nil {
-			fmt.Println(err)
-		}
+		testError(err)
+
 		defer res.Body.Close()
 
 		code := res.StatusCode
@@ -187,22 +167,18 @@ func lookupDownloadedEpisodes(drama scraper.DramaInfo, remote bool) (int, []stri
 		decoder := json.NewDecoder(res.Body)
 		decoder.DisallowUnknownFields()
 		err = decoder.Decode(&obj)
-		if err != nil {
-			fmt.Println(err)
-		}
+		testError(err)
+
 		cnt = obj.NumOfEpisodes
 		epInfo = obj.DownloadedEpisodes
 		// err = obj.Error
 		csize = obj.Size
 	} else {
 		cnt, epInfo, err = downloader.CollectionLookup(drama.Name)
-		if err != nil {
-			fmt.Println(err)
-		}
+		testError(err)
+
 		csize, err = downloader.DirSize(drama.Name)
-		if err != nil {
-			fmt.Println(err)
-		}
+		testError(err)
 	}
 
 	return cnt, epInfo, csize
@@ -213,21 +189,16 @@ func updateRecent(drama *scraper.DramaInfo, remote bool) {
 		url := GetRemoteURL("api/recentdownload")
 
 		json, err := json.Marshal(*drama)
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(json))
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
 		res, err := client.Do(req)
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
+
 		defer res.Body.Close()
 
 		fmt.Printf("Received Status: %s\n\n", res.Status)
@@ -241,16 +212,13 @@ func searchRecent(remote bool) *scraper.DramaInfo {
 	if remote {
 		var obj []scraper.DramaInfo
 		res, err := Request("GET", "api/recentdownloads")
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
+
 		defer res.Body.Close()
 		decoder := json.NewDecoder(res.Body)
 		decoder.DisallowUnknownFields()
 		err = decoder.Decode(&obj)
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 
 		recent = obj
 	} else {
@@ -268,11 +236,7 @@ func searchRecent(remote bool) *scraper.DramaInfo {
 	}
 
 	res, err := prompt.Drama(append([]scraper.DramaInfo{searchItem}, recent...))
-	if err == promptui.ErrInterrupt {
-		os.Exit(0)
-	} else if err != nil {
-		panic(err)
-	}
+	prompt.ProcessPromptError(err)
 
 	if *res == searchItem {
 		fmt.Println("Searching for drama instead.")
@@ -284,22 +248,14 @@ func searchRecent(remote bool) *scraper.DramaInfo {
 func searchDrama() *scraper.DramaInfo {
 	var drama *scraper.DramaInfo
 	res, err := prompt.String("Search")
-	if err == promptui.ErrInterrupt {
-		os.Exit(0)
-	} else if err != nil {
-		panic(err)
-	}
+	prompt.ProcessPromptError(err)
 	queries := scraper.Search(res)
 	if len(queries) == 0 {
 		fmt.Printf("Found no results found with '%s'.\n", res)
 		return searchDrama()
 	} else {
 		resInfo, err := prompt.Drama(queries)
-		if err == promptui.ErrInterrupt {
-			os.Exit(0)
-		} else if err != nil {
-			panic(err)
-		}
+		prompt.ProcessPromptError(err)
 		drama = resInfo
 		//TODO: more rigorous checking
 	}
@@ -321,17 +277,13 @@ DownloadMethod:
 		fmt.Printf("\nFOUND STREAMING LINK: `%s`\n", streaming)
 
 		id, err := getID(streaming)
-		if err != nil {
-			fmt.Println(err)
-		}
+		testError(err)
 
 		fmt.Println("FOUND ID:", id)
 		fmt.Println("Suggestion:", scraper.LDBase+id)
 
 		manualLink, err := prompt.String(fmt.Sprintf("Enter link for %s #%v", name, episodeNum))
-		if err == promptui.ErrAbort {
-			os.Exit(0)
-		}
+		prompt.ProcessPromptError(err)
 		fmt.Printf("\nEntered MANUAL link: `%s`\n\n", manualLink)
 		dinfo = downloader.DownloadInfo{
 			Link: strings.Trim(manualLink, " \n"),
@@ -358,9 +310,7 @@ DownloadMethod:
 		fmt.Printf("\nFOUND STREAMING LINK: `%s`\n", streaming)
 
 		id, err := getID(streaming)
-		if err != nil {
-			fmt.Println(err)
-		}
+		testError(err)
 
 		fmt.Println("Using ID", id)
 		if len(id) == 0 {
@@ -390,21 +340,15 @@ DownloadMethod:
 			DInfo: dinfo,
 			Props: prop,
 		})
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 
 		req, err := http.NewRequest("POST", u, bytes.NewBuffer(jobinfo))
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
 		res, err := client.Do(req)
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 		defer res.Body.Close()
 
 		var job server.DownloadJob
@@ -412,9 +356,7 @@ DownloadMethod:
 		decoder := json.NewDecoder(res.Body)
 		decoder.DisallowUnknownFields()
 		err = decoder.Decode(&job)
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 
 		fmt.Printf("Job ID:     %s\n", job.ID)
 		fmt.Printf("Job Status: %s\n\n", job.Progress.Status)
@@ -422,9 +364,7 @@ DownloadMethod:
 	} else {
 		fmt.Println("Downloading...")
 		err := downloader.Get(dinfo, prop)
-		if err != nil {
-			panic(err)
-		}
+		testError(err)
 	}
 }
 

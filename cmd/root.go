@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"dcs/config"
+	"dcs/prompt"
 	"dcs/scraper"
 	"fmt"
 	"os"
@@ -33,6 +34,18 @@ func Execute() {
 	}
 }
 
+// Test if err != nil, then ask user whether to proceed with error
+func testError(err error) {
+	if err == nil {
+		return
+	}
+	fmt.Println(err)
+	exit := !prompt.Confirm("Would you like to continue?")
+	if exit {
+		os.Exit(1)
+	}
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -46,6 +59,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolP("remote", "r", false, "Download from remote server")
 	rootCmd.PersistentFlags().StringP("remote-host", "a", "", "Specify host address of remote DCS")
 	rootCmd.PersistentFlags().StringP("remote-port", "p", "", "Specify port of remote DCS")
+	rootCmd.PersistentFlags().BoolVarP(&scraper.NOPROXY, "no-proxy", "N", false, "disable all proxies")
 	viper.BindPFlag("DaemonHost", rootCmd.PersistentFlags().Lookup("remote-host"))
 	viper.BindPFlag("DaemonPort", rootCmd.PersistentFlags().Lookup("remote-port"))
 
