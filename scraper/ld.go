@@ -11,15 +11,13 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-var ldBase = "https://asianload.io/download?id="
-
 type dlink struct {
 	Label string
 	Link  string
 }
 
 func ScrapeLD(id string) string {
-	u := ldBase + id
+	u := LDBase + id
 	fmt.Println("Scraping for download links in ", u)
 	c := getCollector()
 
