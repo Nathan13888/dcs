@@ -84,11 +84,7 @@ func DirSelect(label string, files []os.FileInfo, foldersOnly bool) (os.FileInfo
 		Items: names,
 	}
 	_, res, err := p.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(0)
-	} else if err != nil {
-		panic(err)
-	}
+	ProcessPromptError(err)
 
 	file, exists := displayed[res]
 	if !exists {
@@ -108,11 +104,7 @@ func Confirm(label string) bool {
 		},
 	}
 	res, err := p.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(0)
-	} else if err != nil {
-		panic(err)
-	}
+	ProcessPromptError(err)
 
 	return strings.EqualFold(res, "Y")
 }
@@ -129,11 +121,7 @@ func String(label string) (string, error) {
 		},
 	}
 	res, err := p.Run()
-	if err == promptui.ErrInterrupt {
-		os.Exit(0)
-	} else if err != nil {
-		panic(err)
-	}
+	ProcessPromptError(err)
 	return res, err
 }
 
@@ -151,5 +139,14 @@ func PositiveInteger(label string) (string, error) {
 		},
 	}
 	res, err := p.Run()
+	ProcessPromptError(err)
 	return res, err
+}
+
+func ProcessPromptError(err error) {
+	if err == promptui.ErrInterrupt {
+		os.Exit(0)
+	} else if err != nil {
+		panic(err)
+	}
 }
