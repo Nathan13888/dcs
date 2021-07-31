@@ -1,6 +1,7 @@
 package config
 
 import (
+	"dcs/scraper"
 	"fmt"
 	"os"
 	"path"
@@ -53,6 +54,7 @@ func Configure() {
 	} else {
 		panic(err)
 	}
+	scraper.ConfigProxies(Proxies())
 }
 
 func SetDefaults() {
@@ -60,6 +62,8 @@ func SetDefaults() {
 	viper.SetDefault("DownloadMethod", DEFAULTMETHOD) // refer to DMethod
 	viper.SetDefault("DaemonHost", "localhost")
 	viper.SetDefault("DaemonPort", 6969)
+	viper.SetDefault("NoProxy", true)
+	viper.SetDefault("Proxies", []string{})
 	viper.SetDefault("EnableFileServer", false)
 	viper.SetDefault("DownloadLimit", 2)
 	viper.SetDefault("DSN", path.Join(GetConfigHome(), "dcs.db"))
@@ -102,6 +106,13 @@ func DownloadMethod() DMethod {
 
 func DaemonURL() (string, int) {
 	return viper.GetString("DaemonHost"), viper.GetInt("DaemonPort")
+}
+
+func Proxies() []string {
+	if viper.GetBool("NoProxy") {
+		return []string{}
+	}
+	return viper.GetStringSlice("Proxies")
 }
 
 func EnableFileServer() bool {

@@ -21,8 +21,5 @@ func Ping(url string, port int) bool {
 		fmt.Sprintf("%s:%d", url, port),
 		timeout,
 	)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }

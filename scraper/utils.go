@@ -14,9 +14,24 @@ import (
 	"time"
 
 	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/proxy"
 )
 
 var ASIANLOAD bool = false
+var PROXIES []string = make([]string, 0)
+var NOPROXY bool
+
+func ConfigProxies(proxies []string) {
+	if !NOPROXY {
+		PROXIES = proxies
+		// for _, p := range proxies {
+		// 	// TODO: proxy validation
+		// 	PROXIES = append(PROXIES, p)
+		// }
+	}
+
+	fmt.Println("Using Proxies:", PROXIES)
+}
 
 func printObj(obj interface{}) {
 	resJSON, _ := json.MarshalIndent(obj, "  ", "    ")
@@ -41,12 +56,23 @@ func getCollector() *colly.Collector {
 
 	// Set error handler
 	c.OnError(func(r *colly.Response, err error) {
-		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+		fmt.Println("Request URL:", r.Request.URL, "failed with response:", r.StatusCode, "\nError:", err)
+		r.Save("tmp.error.html")
 	})
 
 	c.OnRequest(func(r *colly.Request) {
 		r.Headers.Set("User-Agent", USERAGENT)
 	})
+
+	if len(PROXIES) > 0 {
+		if p, err := proxy.RoundRobinProxySwitcher(PROXIES...); err == nil {
+			c.SetProxyFunc(p)
+		} else {
+			fmt.Println(err)
+		}
+	} else {
+		fmt.Println("NO PROXIES are being used.")
+	}
 
 	return c
 }
