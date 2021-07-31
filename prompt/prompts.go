@@ -114,11 +114,7 @@ func Confirm(label string) bool {
 		panic(err)
 	}
 
-	if strings.EqualFold(res, "Y") {
-		return true
-	} else {
-		return false
-	}
+	return strings.EqualFold(res, "Y")
 }
 
 // String - Prompt for a string input
@@ -133,6 +129,11 @@ func String(label string) (string, error) {
 		},
 	}
 	res, err := p.Run()
+	if err == promptui.ErrInterrupt {
+		os.Exit(0)
+	} else if err != nil {
+		panic(err)
+	}
 	return res, err
 }
 
