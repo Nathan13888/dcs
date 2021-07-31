@@ -319,6 +319,15 @@ DownloadMethod:
 	case config.ManualMethod:
 		name, episodeNum, streaming := scraper.GetInfo(episode)
 		fmt.Printf("\nFOUND STREAMING LINK: `%s`\n", streaming)
+
+		id, err := getID(streaming)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println("FOUND ID:", id)
+		fmt.Println("Suggestion:", scraper.LDBase+id)
+
 		manualLink, err := prompt.String(fmt.Sprintf("Enter link for %s #%v", name, episodeNum))
 		if err == promptui.ErrAbort {
 			os.Exit(0)
@@ -348,12 +357,11 @@ DownloadMethod:
 		name, episodeNum, streaming := scraper.GetInfo(episode)
 		fmt.Printf("\nFOUND STREAMING LINK: `%s`\n", streaming)
 
-		parsed, err := url.Parse(streaming)
+		id, err := getID(streaming)
 		if err != nil {
 			fmt.Println(err)
-			// TODO: prompt "error continue"
 		}
-		id := parsed.Query().Get("id")
+
 		fmt.Println("Using ID", id)
 		if len(id) == 0 {
 			if prompt.Confirm("ID not found, would you like to enter your own ID?") {
@@ -418,6 +426,15 @@ DownloadMethod:
 			panic(err)
 		}
 	}
+}
+
+func getID(streaming string) (string, error) {
+	parsed, err := url.Parse(streaming)
+	if err != nil {
+		return "", err
+	}
+	id := parsed.Query().Get("id")
+	return id, nil
 }
 
 func init() {
