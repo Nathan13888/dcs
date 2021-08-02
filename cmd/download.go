@@ -262,7 +262,8 @@ func searchDrama() *scraper.DramaInfo {
 	return drama
 }
 
-// TODO: update error handling and prompts
+var autoOpenLink bool = false
+
 func download(episode string, prop downloader.DownloadProperties) {
 	var dinfo downloader.DownloadInfo
 	u := GetRemoteURL("api/download")
@@ -280,7 +281,14 @@ DownloadMethod:
 		testError(err)
 
 		fmt.Println("FOUND ID:", id)
-		fmt.Println("Suggestion:", scraper.LDBase+id)
+		suggestion := scraper.LDBase + id
+		fmt.Println("Suggestion:", suggestion)
+		if !autoOpenLink && prompt.Confirm("Would you like to automatically open all these links?") {
+			autoOpenLink = true
+		}
+		if autoOpenLink {
+			open(suggestion)
+		}
 
 		manualLink, err := prompt.String(fmt.Sprintf("Enter link for %s #%v", name, episodeNum))
 		prompt.ProcessPromptError(err)
