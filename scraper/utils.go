@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -127,7 +128,9 @@ func EscapeName(name string) string {
 			sb.WriteRune(c)
 		}
 	}
-	return strings.TrimSpace(sb.String())
+	escaped := strings.TrimSpace(sb.String())
+	escaped = regexp.MustCompile(`\s+`).ReplaceAllString(escaped, " ")
+	return escaped
 }
 
 // JoinURL combines several parts of URLs together into a string
