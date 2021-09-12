@@ -2,13 +2,12 @@
 FROM golang:1.16-alpine as builder
 WORKDIR /build/
 COPY . .
-RUN apk add --no-cache make gcc musl-dev
+RUN apk add --no-cache make gcc musl-dev git
 RUN make build
-#RUN go build -o ./bin/dcs
 
 # IMAGE: CONTAINER
 FROM alpine:latest
-MAINTAINER Nathan13888
+LABEL author=Nathan13888
 WORKDIR /app
 
 # ENV VARIABLES
